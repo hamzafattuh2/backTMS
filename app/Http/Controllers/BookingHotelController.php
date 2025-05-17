@@ -12,14 +12,14 @@ class BookingHotelController extends Controller
     public function book(Request $request, Hotel $hotel)
     {
         $validated = $request->validate([
-            'booking_date' => 'required|date|after_or_equal:today',
+            // 'booking_date' => 'required|date|after_or_equal:today',
             'special_requests' => 'nullable|string',
         ]);
         $booking = BookingHotel::create([
             'hotel_id' => $hotel->id,
             'user_id' => Auth::id(),
             'status' => 'pending',
-            'booking_date' => $validated['booking_date'],
+            'booking_date' => now()->toDateString(),
             'special_requests' => $validated['special_requests'] ?? null,
             'payment_status' => 'not pay',
         ]);
@@ -28,4 +28,4 @@ class BookingHotelController extends Controller
             'booking' => $booking
         ], 201);
     }
-} 
+}

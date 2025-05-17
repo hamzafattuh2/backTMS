@@ -17,7 +17,7 @@ return new class extends Migration
             $table->dateTime('end_date');
             $table->string('language_guide');
             $table->integer('days_count');
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 10, 2)->nullable();
             $table->string('status');
             $table->enum('public_or_private', ['public', 'private']);
             $table->boolean('delete_able')->default(true);
@@ -28,4 +28,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('trips');
     }
-}; 
+};

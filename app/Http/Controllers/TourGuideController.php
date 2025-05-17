@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Notifications\TwoFactorCode;
 use App\Models\TourGuide;
 use App\Models\User;
+use App\Models\Wallet;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -124,6 +125,13 @@ class TourGuideController extends Controller
                 'guide_picture_path' => $relativeGuidePicturePath, // تمت إضافة هذا الحقل
                 'confirmByAdmin' => false,
             ]);
+
+            $wallet = Wallet::create(
+                [
+                    'user_id' => $user->id,
+                    'balance' => 0,
+                ]
+            );
 
             return response()->json(
                 [
@@ -280,35 +288,35 @@ class TourGuideController extends Controller
     //     }
     // }
     public function logoutTourGuide(Request $request)
-{
-    try {
-        $tourGuide = $request->user();
+    {
+        try {
+            $tourGuide = $request->user();
 
-        if (!$tourGuide) {
+            if (!$tourGuide) {
+                return response()->json([
+                    'message' => 'No authenticated user found',
+                    'status' => 'error'
+                ], 401);
+            }
+
+            // حذف التوكن الحالي فقط
+            $tourGuide->currentAccessToken()->delete();
+
             return response()->json([
-                'message' => 'No authenticated user found',
+                'message' => 'Logout successful',
+                'data' => [
+                    'id' => $tourGuide->id,
+                    'name' => $tourGuide->first_name . ' ' . $tourGuide->last_name,
+                    'email' => $tourGuide->email
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Logout failed',
+                'error' => $e->getMessage(),
                 'status' => 'error'
-            ], 401);
+            ], 500);
         }
-
-        // حذف التوكن الحالي فقط
-        $tourGuide->currentAccessToken()->delete();
-
-        return response()->json([
-            'message' => 'Logout successful',
-            'data' => [
-                'id' => $tourGuide->id,
-                'name' => $tourGuide->first_name . ' ' . $tourGuide->last_name,
-                'email' => $tourGuide->email
-            ]
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Logout failed',
-            'error' => $e->getMessage(),
-            'status' => 'error'
-        ], 500);
     }
-}
 }

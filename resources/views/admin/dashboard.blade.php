@@ -84,8 +84,11 @@
             <!-- Trips -->
             <a href="{{ route('admin.trips.index') }}" class="btn">Trips List</a>
 
+            <!-- Tourists -->
+            <a href="{{ route('admin.tourists.all') }}" class="btn">Tourists List</a>
+
             <!-- Wallet -->
-            {{-- <a href="{{ route('admin.wallet.charges') }}" class="btn">Wallet Charges</a> --}}
+            <a href="{{ route('admin.wallet.charges') }}" class="btn">Wallet Charges</a>
         </div>
     </div>
 </body>

@@ -18,6 +18,7 @@ return new class extends Migration
     $table->string('type'); // 'deposit', 'withdrawal', 'transfer'
     $table->string('description')->nullable();
     $table->string('reference')->nullable();
+    $table->boolean('confirm_admin')->default(false);
     $table->timestamps();
 
     $table->index('wallet_id');

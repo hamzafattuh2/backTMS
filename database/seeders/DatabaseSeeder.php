@@ -12,5 +12,12 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             // Add other seeders here
         ]);
+        $this->call(HotelSeeder::class);
+        $this->call(RestaurantSeeder::class);
+        $this->call(TripSeeder::class);
+        $this->call([
+            TouristSeeder::class,
+            // يمكنك إضافة باقي Seeders هنا
+        ]);
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotels</title>
+    <title>Tourists</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -83,9 +83,7 @@
     </style>
 </head>
 <body>
-    <h2>Hotels</h2>
-    <a href="{{ route('admin.hotels.create') }}" class="button">Add New Hotel</a>
-
+    <h2>Tourists</h2>
     @if(session('success'))
         <div class="success-message">{{ session('success') }}</div>
     @endif
@@ -93,30 +91,28 @@
     <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Location</th>
-                <th>Price/Night</th>
-                <th>Stars</th>
-                <th>Active</th>
+                <th>User Name</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Gender</th>
+                <th>Birth Date</th>
+                <th>Code</th>
+                <th>Expire At</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($hotels as $hotel)
+            @foreach($tourists as $tourist)
                 <tr>
-                    <td>{{ $hotel->name }}</td>
-                    <td>{{ $hotel->location }}</td>
-                    <td>{{ $hotel->price_per_night }}</td>
-                    <td>{{ $hotel->stars }}</td>
-                    <td>{{ $hotel->is_active ? 'Yes' : 'No' }}</td>
-                    <td class="action-links">
-                        <a href="{{ route('admin.hotels.edit', $hotel) }}">Edit</a>
-                        <form action="{{ route('admin.hotels.destroy', $hotel) }}" method="POST" onsubmit="return confirm('Delete this hotel?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
+                    <td>{{ $tourist['user_name'] }}</td>
+                    <td>{{ $tourist['first_name'] }} {{ $tourist['last_name'] }}</td>
+                    <td>{{ $tourist['email'] }}</td>
+                    <td>{{ $tourist['phone_number'] }}</td>
+                    <td>{{ ucfirst($tourist['gender']) }}</td>
+                    <td>{{ $tourist['birth_date'] ?? 'N/A' }}</td>
+                    <td>{{ $tourist['code'] ?? 'N/A' }}</td>
+                    <td>{{ $tourist['expire_at'] ?? 'N/A' }}</td>
                 </tr>
             @endforeach
         </tbody>

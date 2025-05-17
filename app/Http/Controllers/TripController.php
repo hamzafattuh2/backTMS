@@ -120,22 +120,72 @@ class TripController extends Controller
         $trip->delete();
         return response()->json(['message' => 'Private trip deleted']);
     }
-    public function offerPrice(Request $request, $tripId)
-    {
-        $request->validate([
-            'price' => 'required|numeric|min:0',
-        ]);
-        $trip = Trip::where('id', $tripId)
-            ->where('guide_id', $request->user()->id)
-            ->firstOrFail();
-        $suggestion = TripPriceSuggestion::create([
-            'trip_id' => $trip->id,
-            'guide_id' => $request->user()->id,
-            'price' => $request->price,
-            'is_accepted' => false,
-        ]);
-        return response()->json(['message' => 'Price offered', 'suggestion' => $suggestion]);
+  public function offerPrice(Request $request, $tripId)
+{
+    $request->validate([
+        'price' => 'required|numeric|min:0',
+    ]);
+
+    $trip = Trip::findOrFail($tripId);
+
+    // 1. Check if the trip is public
+    if ($trip->public_or_private === 'public') {
+        return response()->json([
+            'message' => 'You cannot offer a price because this is a public trip and the price is fixed by the admin.'
+        ], 403);
     }
+
+    // 2. Check if a guide is already assigned (and it's not the current user)
+    if ($trip->guide_id !== null && $trip->guide_id !== $request->user()->id) {
+        return response()->json([
+            'message' => 'A tour guide has already been assigned to this trip. You cannot suggest a new price.'
+        ], 403);
+    }
+
+    // 3. Check if price is already set in the trip (not null or empty)
+    if (!is_null($trip->price) && $trip->price !== '') {
+        return response()->json([
+            'message' => 'A price has already been set for this trip. Price suggestion is not allowed.'
+        ], 403);
+    }
+
+    // 4. Check if a previous suggestion was already accepted
+    $existingAccepted = TripPriceSuggestion::where('trip_id', $tripId)
+        ->where('is_accepted', true)
+        ->first();
+
+    if ($existingAccepted) {
+        return response()->json([
+            'message' => 'A price suggestion has already been accepted by the tourist.'
+        ], 403);
+    }
+
+    // 5. Check if there is already a pending suggestion by this guide
+    $existingPending = TripPriceSuggestion::where('trip_id', $tripId)
+        ->where('guide_id', $request->user()->id)
+        ->where('is_accepted', false)
+        ->first();
+
+    if ($existingPending) {
+        return response()->json([
+            'message' => 'You have already submitted a price suggestion. Please wait for the tourist to respond.'
+        ], 403);
+    }
+
+    // Create new suggestion
+    $suggestion = TripPriceSuggestion::create([
+        'trip_id' => $trip->id,
+        'guide_id' => $request->user()->id,
+        'price' => $request->price,
+        'is_accepted' => false,
+    ]);
+
+    return response()->json([
+        'message' => 'Price suggestion submitted successfully.',
+        'suggestion' => $suggestion
+    ]);
+}
+
     public function guideCompletedPrivateTrips(Request $request)
     {
         $trips = Trip::where('public_or_private', 'private')
@@ -152,7 +202,13 @@ class TripController extends Controller
             ->get();
         return response()->json(['trips' => $trips]);
     }
-    public function guideOngoingPrivateTrips(Request $request) { return response()->json(['trips' => []]); }
+    public function guideOngoingPrivateTrips(Request $request) {
+        $trips = Trip::where('public_or_private', 'private')
+            ->where('status', 'ongoing')
+            ->where('guide_id', $request->user()->id)
+            ->get();
+        return response()->json(['trips' => $trips]);
+  }
     public function guideOngoingPublicTrips(Request $request)
     {
         $trips = Trip::where('public_or_private', 'public')
@@ -161,11 +217,13 @@ class TripController extends Controller
             ->get();
         return response()->json(['trips' => $trips]);
     }
-    public function tripsWithoutGuide(Request $request)
+    public function privateTripsWithoutGuide(Request $request)
     {
         $trips = Trip::whereNull('guide_id')
-            ->whereIn('status', ['pending', 'waiting_guide'])
+            ->whereIn('status', ['pending', 'waiting_guide'])//قيد الانتظار او انتظار غايد
+            ->where('public_or_private', 'private')//حمزة
+
             ->get();
         return response()->json(['trips' => $trips]);
     }
-} 
+}

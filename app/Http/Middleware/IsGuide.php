@@ -15,4 +15,22 @@ class IsGuide
         }
         abort(403, 'Unauthorized');
     }
-} 
+
+    //تابع ثاني
+    //    public function handle(Request $request, Closure $next): Response
+    // {
+    //     $user = auth()->user();
+
+    //     if (!$user || !$user->tourGuide) {
+    //         abort(403, 'Unauthorized guide');
+    //     }
+
+    //     $conf = $user->tourGuide->confirmByAdmin;
+
+    //     if ($conf === 1) {
+    //         return $next($request);
+    //     }
+
+    //     abort(403, 'Admin did not confirm guide.');
+    // }
+}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Tourist;
+use App\Models\Wallet;
 use App\Models\User;
 use Illuminate\Support\Facades\DB; // أضف هذا السطر
 use Illuminate\Support\Facades\Hash; // أضف هذا السطر
@@ -74,7 +75,12 @@ class TouristController extends Controller
                 'emergency_contact' => $validatedData['emergency_contact'],
                 'special_needs' => $validatedData['special_needs'] ?? null,
             ]);
-
+  $wallet = Wallet::create(
+                [
+                    'user_id' => $user->id,
+                    'balance' => 0,
+                ]
+            );
             // إتمام المعاملة
             DB::commit();
 

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\TourGuide;
 use App\Models\Trip;
 use App\Models\WalletTransaction;
+use App\Models\Wallet;
 use App\Models\TouristPlace;
 use App\Models\Feedback;
 use App\Models\Tourist;
@@ -110,7 +111,7 @@ class AdminController extends Controller
 
     public function pendingWalletCharges()
     {
-        $transactions = WalletTransaction::where('type', 'deposit')->whereNull('confirm_admin')->get();
+        $transactions = WalletTransaction::where('type', 'deposit')->where('confirm_admin',false)->get();
         return view('admin.wallet.charges', compact('transactions'));
     }
 
@@ -118,6 +119,9 @@ class AdminController extends Controller
     {
         $transaction->confirm_admin = true;
         $transaction->save();
+        $wallet = Wallet::where('id',$transaction->wallet_id)->first();
+        $wallet->balance = $wallet->balance + $transaction->amount;
+        $wallet->save();
         return redirect()->route('admin.wallet.charges')->with('success', 'Wallet charge confirmed.');
     }
 
@@ -185,7 +189,7 @@ class AdminController extends Controller
 
     public function allTourists()
     {
-        $tourists = Tourist::with('user')->get();
-        return view('admin.tourists.all', compact('tourists'));
+        $tourists = User::where('type','tourist')->get();
+        return view('admin.tourism.tourism', compact('tourists'));
     }
 }
