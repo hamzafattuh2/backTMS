@@ -10,7 +10,7 @@ return new class extends Migration
         Schema::create('trips', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('guide_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('guide_id')->nullable()->constrained('tour_guides')->onDelete('set null');
             $table->string('title');
             $table->text('description');
             $table->dateTime('start_date');

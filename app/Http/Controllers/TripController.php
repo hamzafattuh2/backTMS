@@ -6,7 +6,8 @@ use App\Models\Trip;
 use App\Models\TripDay;
 use App\Models\TripActivity;
 use App\Models\TripPriceSuggestion;
-
+use Illuminate\Http\JsonResponse;
+use App\Notifications\PriceSuggested;   // أعلى الملف
 class TripController extends Controller
 {
     public function publicTrips(Request $request)
@@ -88,7 +89,7 @@ class TripController extends Controller
     {
         $trips = Trip::where('public_or_private', 'public')
             ->where('status', 'completed')
-            ->whereHas('bookingChairTrips', function($q) use ($request) {
+            ->whereHas('bookingChairTrips', function ($q) use ($request) {
                 $q->where('user_id', $request->user()->id);
             })
             ->get();
@@ -120,71 +121,76 @@ class TripController extends Controller
         $trip->delete();
         return response()->json(['message' => 'Private trip deleted']);
     }
-  public function offerPrice(Request $request, $tripId)
-{
-    $request->validate([
-        'price' => 'required|numeric|min:0',
-    ]);
+    public function offerPrice(Request $request, $tripId)
+    {
+        $request->validate([
+            'price' => 'required|numeric|min:0',
+        ]);
 
-    $trip = Trip::findOrFail($tripId);
+        $trip = Trip::findOrFail($tripId);
 
-    // 1. Check if the trip is public
-    if ($trip->public_or_private === 'public') {
+        // 1. Check if the trip is public
+        if ($trip->public_or_private === 'public') {
+            return response()->json([
+                'message' => 'You cannot offer a price because this is a public trip and the price is fixed by the admin.'
+            ], 403);
+        }
+        $guide      = $request->user()->tourGuide;
+        // $user= $request->user()->id;
+// $guide= $user->tourGuide;
+$guideId=$guide->id;
+        // 2. Check if a guide is already assigned (and it's not the current user)
+        if ($trip->guide_id !== null && $trip->guide_id !== $guideId) {
+            return response()->json([
+                'message' => 'A tour guide has already been assigned to this trip. You cannot suggest a new price.'
+            ], 403);
+        }
+
+        // 3. Check if price is already set in the trip (not null or empty)
+        if (!is_null($trip->price) && $trip->price !== '') {
+            return response()->json([
+                'message' => 'A price has already been set for this trip. Price suggestion is not allowed.'
+            ], 403);
+        }
+
+        // 4. Check if a previous suggestion was already accepted
+        $existingAccepted = TripPriceSuggestion::where('trip_id', $tripId)
+            ->where('is_accepted', true)
+            ->first();
+
+        if ($existingAccepted) {
+            return response()->json([
+                'message' => 'A price suggestion has already been accepted by the tourist.'
+            ], 403);
+        }
+
+        // 5. Check if there is already a pending suggestion by this guide
+        $existingPending = TripPriceSuggestion::where('trip_id', $tripId)
+            ->where('guide_id', $request->user()->id)
+            ->where('is_accepted', false)
+            ->first();
+
+        if ($existingPending) {
+            return response()->json([
+                'message' => 'You have already submitted a price suggestion. Please wait for the tourist to respond.'
+            ], 403);
+        }
+
+        // Create new suggestion
+        $suggestion = TripPriceSuggestion::create([
+            'trip_id' => $trip->id,
+            'guide_id' => $request->user()->id,
+            'price' => $request->price,
+            'is_accepted' => false,
+        ]);
+
+    $tripOwner = $trip->user;             // علاقة belongsTo في Trip
+    $tripOwner->notify(new PriceSuggested($suggestion));
         return response()->json([
-            'message' => 'You cannot offer a price because this is a public trip and the price is fixed by the admin.'
-        ], 403);
-    }
-
-    // 2. Check if a guide is already assigned (and it's not the current user)
-    if ($trip->guide_id !== null && $trip->guide_id !== $request->user()->id) {
-        return response()->json([
-            'message' => 'A tour guide has already been assigned to this trip. You cannot suggest a new price.'
-        ], 403);
-    }
-
-    // 3. Check if price is already set in the trip (not null or empty)
-    if (!is_null($trip->price) && $trip->price !== '') {
-        return response()->json([
-            'message' => 'A price has already been set for this trip. Price suggestion is not allowed.'
-        ], 403);
-    }
-
-    // 4. Check if a previous suggestion was already accepted
-    $existingAccepted = TripPriceSuggestion::where('trip_id', $tripId)
-        ->where('is_accepted', true)
-        ->first();
-
-    if ($existingAccepted) {
-        return response()->json([
-            'message' => 'A price suggestion has already been accepted by the tourist.'
-        ], 403);
-    }
-
-    // 5. Check if there is already a pending suggestion by this guide
-    $existingPending = TripPriceSuggestion::where('trip_id', $tripId)
-        ->where('guide_id', $request->user()->id)
-        ->where('is_accepted', false)
-        ->first();
-
-    if ($existingPending) {
-        return response()->json([
-            'message' => 'You have already submitted a price suggestion. Please wait for the tourist to respond.'
-        ], 403);
-    }
-
-    // Create new suggestion
-    $suggestion = TripPriceSuggestion::create([
-        'trip_id' => $trip->id,
-        'guide_id' => $request->user()->id,
-        'price' => $request->price,
-        'is_accepted' => false,
-    ]);
-
-    return response()->json([
-        'message' => 'Price suggestion submitted successfully.',
+             'message'    => 'Price suggestion submitted successfully and the tourist has been notified.',
         'suggestion' => $suggestion
-    ]);
-}
+        ]);
+    }
 
     public function guideCompletedPrivateTrips(Request $request)
     {
@@ -202,13 +208,14 @@ class TripController extends Controller
             ->get();
         return response()->json(['trips' => $trips]);
     }
-    public function guideOngoingPrivateTrips(Request $request) {
+    public function guideOngoingPrivateTrips(Request $request)
+    {
         $trips = Trip::where('public_or_private', 'private')
             ->where('status', 'ongoing')
             ->where('guide_id', $request->user()->id)
             ->get();
         return response()->json(['trips' => $trips]);
-  }
+    }
     public function guideOngoingPublicTrips(Request $request)
     {
         $trips = Trip::where('public_or_private', 'public')
@@ -226,4 +233,46 @@ class TripController extends Controller
             ->get();
         return response()->json(['trips' => $trips]);
     }
+   public function indexByStatus(Request $request): JsonResponse
+{
+    /*----------------------------------------------------------
+    | 1) قراءة مُدخلات الـ query‑string
+    *---------------------------------------------------------*/
+    $status        = $request->query('status');          // ?status=...
+    $languageGuide = $request->query('language_guide');  // ?language_guide=...
+
+    /*----------------------------------------------------------
+    | 2) التحقق من صحة قيمة status (إن وُجدت)
+    *---------------------------------------------------------*/
+    $allowedStatus = ['with-guide', 'pending', 'finished'];
+    if ($status !== null && ! in_array($status, $allowedStatus, true)) {
+        return response()->json(['message' => 'قيمة ‎status غير مسموحة.'], 422);
+    }
+
+    /*----------------------------------------------------------
+    | 3) بناء الاستعلام بشكل ديناميكي
+    *---------------------------------------------------------*/
+    $query = Trip::query();
+
+    // فلترة حسب اللغة إن طُلِبت
+    if ($languageGuide !== null) {
+        $query->where('language_guide', $languageGuide);
+    }
+
+    // فلترة حسب الحالة إن طُلِبت
+    if ($status !== null) {
+        $query->where('status', $status);
+    }
+
+    /*----------------------------------------------------------
+    | 4) تنفيذ الاستعلام مع ترقيم الصفحات (اختياري)
+    *---------------------------------------------------------*/
+    $trips = $query->get();   // يمكن استخدام ->get() فقط إن لم ترغب في pagination
+
+    /*----------------------------------------------------------
+    | 5) إرجاع النتيجة
+    *---------------------------------------------------------*/
+    return response()->json($trips, 200);
+}
+
 }

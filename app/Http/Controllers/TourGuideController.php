@@ -8,43 +8,14 @@ use App\Notifications\TwoFactorCode;
 use App\Models\TourGuide;
 use App\Models\User;
 use App\Models\Wallet;
-
-use Illuminate\Support\Facades\Auth;
+use App\Notifications\BroadcastToGuides;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Notification;
 
 class TourGuideController extends Controller
 {
 
-    // public function register(Request $request)
-    // {
-    //     try {
-    //         $validatedData = $request->validate([
-    //             'name' => 'required|string|max:255',
-    //             'email' => 'required|string|email|max:255|unique:users,email',
-    //             'password' => 'required|string|min:8|confirmed'
-    //         ]);
-
-    //         $user = TourGuide::create([
-    //             'name' => $validatedData['name'],
-    //             'email' => $validatedData['email'],
-    //             'password' => Hash::make($validatedData['password'])
-    //         ]);
-
-    //         return response()->json([
-    //             'message' => 'User registered successfully',
-    //             'user' => $user
-    //         ], 201);
-
-    //     } catch (\Illuminate\Validation\ValidationException $e) {
-    //         return response()->json([
-    //             'message' => 'Validation failed',
-    //             'errors' => $e->errors()
-    //         ], 422); // HTTP 422 Unprocessable Entity
-    //     }
-    // }
-
-
-    public function registerTourGuide(Request $request)
-    {
+    public function registerTourGuide(Request $request) {
         try {
             // التحقق من البيانات بما فيها الصورة
             $validatedData = $request->validate([
@@ -55,7 +26,8 @@ class TourGuideController extends Controller
                 'email' => 'required|string|email|max:255|unique:users,email',
                 'password' => 'required|string|min:8|confirmed',
                 'phone_number' => 'required|string|max:20',
-                'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
+                'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',//nullable
+
                 'type' => 'nullable|string',
                 'gender' => 'required|in:male,female',
                 'birth_date' => 'required|date',//2
@@ -68,6 +40,12 @@ class TourGuideController extends Controller
                 'guide_picture_path' => 'required|image|mimes:jpeg,png|max:2048', // صورة بحد أقصى 2MB
             ]);
 
+            if ($request->hasFile('profile_image')) {
+    $profilePath = $request->file('profile_image')->store('public/profile_images');
+    $profilePicturePath = str_replace('public/', '', $profilePath);
+} else {
+    $profilePicturePath = null;
+}
             // تخزين الصورة
             $licensePath = $request->file('license_picture_path')->store('public/license_picture_path');
             $relativeLicensePath = str_replace('public/', '', $licensePath);
@@ -90,30 +68,10 @@ class TourGuideController extends Controller
                 'profile_image' => $profilePicturePath ?? null,
                 'gender' => $validatedData['gender'],
                 'birth_date' => $validatedData['birth_date'] ?? null,
-
-
             ]);
             $token = $user->createToken('tour_guide_auth_token')->plainTextToken;
             $user->generateCode();
             $user->notify(new TwoFactorCode());
-
-
-            // $touristData = [
-            //     'user_id' => $user->id,
-            //     'nationality' => $validatedData['nationality'],
-            //     'emergency_contact' => $validatedData['emergency_contact'],
-            //     'special_needs' => $validatedData['special_needs'] ?? null,
-            // ];
-
-            // // إنشاء السائح في جدول tourists
-            // $tourist = Tourist::create([
-
-            //     'nationality' => $validatedData['nationality'],
-            //     'emergency_contact' => $validatedData['emergency_contact'],
-            //     'special_needs' => $validatedData['special_needs'] ?? null,
-            // ]);
-
-            //Add tour guide
 
 
             $tourGuide = TourGuide::create([
@@ -137,7 +95,10 @@ class TourGuideController extends Controller
                 [
                     [
                         'message' => 'Tour guide registered successfully',
-                        'data' => $tourGuide,
+                        'user'=>$user ,
+                        'tourGuide' => $tourGuide,
+
+
                         'license_picture_url' => asset('storage/' . $relativeLicensePath),
                     ],
                     [
@@ -229,64 +190,7 @@ class TourGuideController extends Controller
     }
 
 
-    // public function logoutTourGuide(Request $request)
-    // {
-    //     try {
-    //         // الحصول على المستخدم الحالي (المرشد السياحي)
-    //         $tourGuide = $request->user();
 
-    //         // حذف التوكن الحالي
-    //         $tourGuide->currentAccessToken()->delete();
-
-    //         return response()->json([
-    //             'message' => 'Logout successful',
-    //             'details' => [
-    //                 'tour_guide_id' => $tourGuide->id,
-    //                 'name' => $tourGuide->first_name . ' ' . $tourGuide->last_name,
-    //                 'email' => $tourGuide->email
-    //             ]
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'message' => 'Logout failed',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-    // public function logoutTourGuide(Request $request)
-    // {
-    //     try {
-    //         if (!$request->user()) {
-    //             return response()->json([
-    //                 'message' => 'No authenticated user found',
-    //                 'status' => 'error'
-    //             ], status: 401);
-    //         }
-
-    //         $tourGuide = $request->user();
-
-    //         // حذف جميع توكنات المستخدم
-    //         // $tourGuide->tokens()->delete();
-    //         $request->user()->currentAccessToken()->delete();
-
-    //         return response()->json([
-    //             'message' => 'Logout successful',
-    //             'data' => [
-    //                 'id' => $tourGuide->id,
-    //                 'name' => $tourGuide->full_name,
-    //                 'email' => $tourGuide->email
-    //             ]
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'message' => 'Logout failed',
-    //             'error' => $e->getMessage(),
-    //             'status' => 'error'
-    //         ], 500);
-    //     }
-    // }
     public function logoutTourGuide(Request $request)
     {
         try {
@@ -318,5 +222,48 @@ class TourGuideController extends Controller
                 'status' => 'error'
             ], 500);
         }
+    }
+    public function checkGuideConfirmation()
+    {
+        $user = auth()->user();
+
+        $guide = $user->tourGuide; // استخدام العلاقة one-to-one
+        if (!$guide) {
+            return response()->json(['error' => 'Guide profile not found'], 404);
+        }
+
+        return response()->json([
+            'message' => 'ahlen',
+            'confirm by admin ' => $guide->confirmByAdmin ? "yes" : "no",
+        ], 201);
+
+    }
+    public function notifyAllGuides(Request $request): JsonResponse
+    {
+        // 1) التحقق من البيانات
+        $data = $request->validate([
+            'title' => 'required|string|max:100',
+            'body' => 'required|string|max:1000',
+            'language' => 'nullable|string|max:1000'
+
+        ]);
+
+        // 2) جلب كل المرشدين (Users حيث type = 'guide')
+        // $guides = User::where('type', 'guide')->get();
+        $guides = TourGuide::where('languages', $data['language'])->get();
+
+
+
+        if ($guides->isEmpty()) {
+            return response()->json(['message' => 'لا يوجد مرشدون لإرسال الإشعار.'], 404);
+        }
+
+        // 3) إرسال الإشعار دفعةً واحدة (broadcast + database)
+        Notification::send($guides, new BroadcastToGuides($data['title'], $data['body']));
+
+        return response()->json([
+            'message' => 'تم إرسال الإشعار بنجاح إلى جميع المرشدين.',
+            'guides_notified' => $guides->count(),
+        ], 200);
     }
 }

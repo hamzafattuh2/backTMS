@@ -12,4 +12,5 @@ class TripPriceSuggestion extends Model
     ];
     public function trip() { return $this->belongsTo(Trip::class); }
     public function guide() { return $this->belongsTo(User::class, 'guide_id'); }
-} 
+
+}   

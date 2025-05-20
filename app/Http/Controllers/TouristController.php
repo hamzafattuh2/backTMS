@@ -26,7 +26,7 @@ class TouristController extends Controller
                 'password' => 'required|string|min:8|confirmed',
                 'phone_number' => 'required|string|max:20',
                 'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
-                'type'=>'nullable|string',
+                'type' => 'nullable|string',
                 'gender' => 'required|in:male,female',
                 'birth_date' => 'required|date',//2
 
@@ -51,16 +51,16 @@ class TouristController extends Controller
 
             // إنشاء المستخدم في جدول users
             $user = User::create([
-                'user_name' => $validatedData['user_name'] ,
-                'first_name' => $validatedData['first_name'] ,
-                'last_name' => $validatedData['last_name'] ,
+                'user_name' => $validatedData['user_name'],
+                'first_name' => $validatedData['first_name'],
+                'last_name' => $validatedData['last_name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
                 'type' => 'tourist',
                 'phone_number' => $validatedData['phone_number'],
-                'profile_image' => $profilePicturePath ?? null ,
-                'gender'=> $validatedData['gender'],
-                'birth_date' => $validatedData['birth_date']?? null,
+                'profile_image' => $profilePicturePath ?? null,
+                'gender' => $validatedData['gender'],
+                'birth_date' => $validatedData['birth_date'] ?? null,
 
             ]);
 
@@ -75,7 +75,7 @@ class TouristController extends Controller
                 'emergency_contact' => $validatedData['emergency_contact'],
                 'special_needs' => $validatedData['special_needs'] ?? null,
             ]);
-  $wallet = Wallet::create(
+            $wallet = Wallet::create(
                 [
                     'user_id' => $user->id,
                     'balance' => 0,
@@ -84,17 +84,21 @@ class TouristController extends Controller
             // إتمام المعاملة
             DB::commit();
 
-            return response()->json([[
-                'message' => 'Tourist registered successfully',
-                'user' => $user,
-                'tourist' => $tourist,
-                'profile_picture_url' => $profilePicturePath ? asset('storage/'.$profilePicturePath) : null
-            ],
-            ['access_token' => $token,
-            'token_type' => 'Bearer'
-             ]
-            ],
-            201);
+            return response()->json(
+                [
+                    [
+                        'message' => 'Tourist registered successfully',
+                        'user' => $user,
+                        'tourist' => $tourist,
+                        'profile_picture_url' => $profilePicturePath ? asset('storage/' . $profilePicturePath) : null
+                    ],
+                    [
+                        'access_token' => $token,
+                        'token_type' => 'Bearer'
+                    ]
+                ],
+                201
+            );
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
@@ -144,20 +148,20 @@ class TouristController extends Controller
             return response()->json([
                 'message' => 'Login successful',
                 'tour_guide' => [
-                      //user
+                    //user
                     'id' => $tourist->id,
-                    'user_name' => $tourist->user_name ,
+                    'user_name' => $tourist->user_name,
                     'name' => $tourist->first_name . ' ' . $tourist->last_name,
                     'email' => $tourist->email,
-                    'type'=>$tourist->type,
-                    'phone_number'=>$tourist->phone_number,
-                    'gender'=>$tourist->gender,
-                    'profile_image' => $tourist->guide_picture_path ? asset('storage/'.$tourist->guide_picture_path) : null,
-                    'birth_date'=>$tourist->birth_date,
+                    'type' => $tourist->type,
+                    'phone_number' => $tourist->phone_number,
+                    'gender' => $tourist->gender,
+                    'profile_image' => $tourist->guide_picture_path ? asset('storage/' . $tourist->guide_picture_path) : null,
+                    'birth_date' => $tourist->birth_date,
                     //tourist
-                //     , 'nationality'=>$tourist->nationality,
-                //    , 'special_needs'=>$tourist->special_needs,
-                //    , 'emergency_contact'=>$tourist->emergency_contact,
+                    //     , 'nationality'=>$tourist->nationality,
+                    //    , 'special_needs'=>$tourist->special_needs,
+                    //    , 'emergency_contact'=>$tourist->emergency_contact,
 
                 ],
                 'access_token' => $token,
@@ -187,6 +191,7 @@ class TouristController extends Controller
     {
         $user = $request->user();
         $validated = $request->validate([
+            'current_password' => 'required',
             'user_name' => 'sometimes|string|max:50',
             'first_name' => 'sometimes|string|max:50',
             'last_name' => 'sometimes|string|max:50',
@@ -200,6 +205,9 @@ class TouristController extends Controller
             'emergency_contact' => 'sometimes|string|max:20',
             'special_needs' => 'nullable|string',
         ]);
+        // أزل كلمة السر بعد أن تم التحقق منها في الميدل وير
+        unset($validated['current_password']);
+
         if ($request->hasFile('profile_image')) {
             $path = $request->file('profile_image')->store('public/profile_image');
             $validated['profile_image'] = str_replace('public/', '', $path);

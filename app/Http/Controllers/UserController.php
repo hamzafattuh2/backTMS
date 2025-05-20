@@ -10,26 +10,7 @@ class UserController extends Controller
 {
 
 
-    public function checkGuideConfirmation()
-{
-    $user = auth()->user();
 
-    // if (!$user) {
-    //     // المستخدم غير مسجّل الدخول
-    //     return "null1";
-    // }
-
-    $guide = $user->tourGuide; // استخدام العلاقة one-to-one
-
-    // if (!$guide) {
-    //     // المستخدم ليس لديه مرشد مرتبط
-    //     return "null2";
-    // }
-
-    $conf = $guide->confirmByAdmin;
-
-    return $conf."ahlen";
-}
 
     public function get1(){
         return "user/home doing perfecctlyyyyy";

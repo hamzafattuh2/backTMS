@@ -14,10 +14,13 @@ class DatabaseSeeder extends Seeder
         ]);
         $this->call(HotelSeeder::class);
         $this->call(RestaurantSeeder::class);
-        $this->call(TripSeeder::class);
-        $this->call([
-            TouristSeeder::class,
+
+        $this->call( TouristSeeder::class);
+        $this->call( TourGuideSeeder::class);
+          $this->call(TripSeeder::class);
+        $this->call(TripPriceSuggestionSeeder::class);
+
             // يمكنك إضافة باقي Seeders هنا
-        ]);
+
     }
 }

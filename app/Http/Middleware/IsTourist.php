@@ -10,9 +10,9 @@ class IsTourist
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user && ($user->type === 'tourist' || $user->tourist)) {
+        if ($user && ($user->type === 'tourist' && $user->tourist)) {
             return $next($request);
         }
         abort(403, 'Unauthorized');
     }
-} 
+}

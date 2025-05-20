@@ -10,10 +10,10 @@ class IsGuide
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user && ($user->type === 'guide' || $user->tourGuide)) {
+        if ($user && ($user->type === 'guide' && $user->tourGuide)) {
             return $next($request);
         }
-        abort(403, 'Unauthorized');
+        abort(403, 'Unauthorized22');
     }
 
     //تابع ثاني
