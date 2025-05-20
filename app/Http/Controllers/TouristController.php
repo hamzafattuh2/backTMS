@@ -19,7 +19,7 @@ class TouristController extends Controller
             $validatedData = $request->validate([
 
                 //user
-                'user_name' => 'required|string|max:50',
+                'user_name' => 'required|string|max:50|unique:users,user_name',
                 'last_name' => 'required|string|max:50',
                 'first_name' => 'required|string|max:50',
                 'email' => 'required|string|email|max:255|unique:users,email',
@@ -34,7 +34,7 @@ class TouristController extends Controller
 
                 //tourist
                 'nationality' => 'required|string|max:100',//1
-                'emergency_contact' => 'required|string|max:20',//4
+                // 'emergency_contact' => 'required|string|max:20',//4
                 'special_needs' => 'nullable|string',//3
             ]);
 
@@ -72,7 +72,7 @@ class TouristController extends Controller
             $tourist = Tourist::create([
                 'user_id' => $user->id,
                 'nationality' => $validatedData['nationality'],
-                'emergency_contact' => $validatedData['emergency_contact'],
+                // 'emergency_contact' => $validatedData['emergency_contact'],
                 'special_needs' => $validatedData['special_needs'] ?? null,
             ]);
             $wallet = Wallet::create(

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Trip;
 use App\Models\User;
+use App\Models\TourGuide;
 use App\Models\TripPriceSuggestion;
 
 class TripSeeder extends Seeder
@@ -12,22 +13,22 @@ class TripSeeder extends Seeder
     public function run(): void
     {
         // التأكد من وجود مستخدمين لاستخدامهم كـ user_id و guide_id
-        $users = User::take(3)->get();
-
-        if ($users->count() < 3) {
-            $this->command->info('Please seed at least 3 users before running TripSeeder.');
-            return;
-        }
+        $users = User::take(1)->get();
+    $guide = TourGuide::take(2)->get();
+        // if ($users->count() < 3) {
+        //     $this->command->info('Please seed at least 3 users before running TripSeeder.');
+        //     return;
+        // }
 
         $user1 = $users[0]; // السائح
-        $guide1 = $users[1]; // مرشد صحيح
-        $guide2 = $users[2]; // مرشد خاطئ لحالة الاختبار
+        $guide1 = $guide[0]; // مرشد صحيح
+        $guide2 = $guide[1]; // مرشد خاطئ لحالة الاختبار
 
         // إضافة الرحلات الأصلية
         Trip::insert([
             [
                 'user_id' => $users[0]->id,
-                'guide_id' => $users[1]->id,
+                'guide_id' => $guide1 = $guide[0],
                 'title' => 'Explore the Nile',
                 'description' => 'A 5-day journey exploring the beauty of the Nile River.',
                 'start_date' => now()->addDays(5),
