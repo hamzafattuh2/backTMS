@@ -15,7 +15,117 @@ use Illuminate\Support\Facades\Notification;
 class TourGuideController extends Controller
 {
 
-    public function registerTourGuide(Request $request) {
+public function login(Request $request)
+{
+    try {
+        $validatedData = $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Invalid email'], 401);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid password'], 401);
+        }
+
+        switch ($user->type) {
+            case 'guide':
+
+                // if (!$user->tourGuide || $user->tourGuide->confirmByAdmin !== true) {
+                //     return response()->json([
+                //         'message' => 'Guide account not approved by admin'
+                //     ], 403);
+                // }
+                 if (!$user->tourGuide) {
+        return response()->json([
+            'message' => 'Guide profile not completed'
+        ], 403);
+    }
+
+    if ($user->tourGuide->confirmByAdmin == 0) {
+        return response()->json([
+            'message' => 'wait'
+        ], 403);
+    }
+    elseif ($user->tourGuide->confirmByAdmin == 2) {
+        return response()->json([
+            'message' => 'Guide account not approved by admin'
+        ], 403);
+    }
+
+                $token = $user->createToken('tour_guide_auth_token')->plainTextToken;
+                $user->generateCode();
+
+                return response()->json([
+                    'message' => 'Login successful',
+                    'user' => [
+                        'id' => $user->id,
+                        'user_name' => $user->user_name,
+                        'name' => $user->first_name . ' ' . $user->last_name,
+                        'email' => $user->email,
+                        'type' => $user->type,
+                        'phone_number' => $user->phone_number,
+                        'gender' => $user->gender,
+                        'profile_image' => $user->guide_picture_path ? asset('storage/' . $user->guide_picture_path) : null,
+                        'birth_date' => $user->birth_date,
+                        'years_of_experience' => $user->years_of_experience,
+                        'languages' => $user->languages,
+                        'license_picture_path' => $user->license_picture_path,
+                        'cv_path' => $user->cv_path,
+                    ],
+                    'access_token' => $token,
+                    'token_type' => 'Bearer'
+                ], 200);
+
+            case 'tourist':
+                $token = $user->createToken('tourist_auth_token')->plainTextToken;
+                $user->generateCode();
+
+                return response()->json([
+                    'message' => 'Login successful',
+                    'user' => [
+                        'id' => $user->id,
+                        'user_name' => $user->user_name,
+                        'name' => $user->first_name . ' ' . $user->last_name,
+                        'email' => $user->email,
+                        'type' => $user->type,
+                        'phone_number' => $user->phone_number,
+                        'gender' => $user->gender,
+                        'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                        'birth_date' => $user->birth_date,
+                        'nationality' => $user->tourist->nationality ?? null,
+                        'special_needs' => $user->tourist->special_needs ?? null,
+                        'emergency_contact' => $user->tourist->emergency_contact ?? null,
+                    ],
+                    'access_token' => $token,
+                    'token_type' => 'Bearer'
+                ], 200);
+
+            default:
+                return response()->json([
+                    'message' => 'Invalid user type'
+                ], 401);
+        }
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Login failed',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+    public function registerTourGuide(Request $request)
+    {
         try {
             // التحقق من البيانات بما فيها الصورة
             $validatedData = $request->validate([
@@ -37,24 +147,20 @@ class TourGuideController extends Controller
                 'years_of_experience' => 'required|string',
                 'license_picture_path' => 'required|image|mimes:png,jpeg|max:2048',
                 'cv_path' => 'required|file|mimes:pdf|max:5120', // ملف PDF بحد أقصى 5MB
-                // 'guide_picture_path' => 'required|image|mimes:jpeg,png|max:2048', // صورة بحد أقصى 2MB
             ]);
 
             if ($request->hasFile('profile_image')) {
-    $profilePath = $request->file('profile_image')->store('public/profile_images');
-    $profilePicturePath = str_replace('public/', '', $profilePath);
-} else {
-    $profilePicturePath = null;
-}
+                $profilePath = $request->file('profile_image')->store('public/profile_images');
+                $profilePicturePath = str_replace('public/', '', $profilePath);
+            } else {
+                $profilePicturePath = null;
+            }
             // تخزين الصورة
             $licensePath = $request->file('license_picture_path')->store('public/license_picture_path');
             $relativeLicensePath = str_replace('public/', '', $licensePath);
 
             $cvPath = $request->file('cv_path')->store('public/cvs');
             $relativeCvPath = str_replace('public/', '', $cvPath);
-
-            // $guidePicturePath = $request->file('guide_picture_path')->store('public/guide_pictures');
-            // $relativeGuidePicturePath = str_replace('public/', '', $guidePicturePath);
 
             //add new user
             $user = User::create([
@@ -80,7 +186,6 @@ class TourGuideController extends Controller
                 'years_of_experience' => $validatedData['years_of_experience'],
                 'license_picture_path' => $relativeLicensePath,
                 'cv_path' => $relativeCvPath, // تمت إضافة هذا الحقل
-                // 'guide_picture_path' => $relativeGuidePicturePath, // تمت إضافة هذا الحقل
                 'confirmByAdmin' => false,
             ]);
 
@@ -95,11 +200,10 @@ class TourGuideController extends Controller
                 [
                     [
                         'message' => 'Tour guide registered successfully',
-                        'user'=>$user ,
+                        'user' => $user,
                         'tourGuide' => $tourGuide,
 
 
-                        // 'license_picture_url' => asset('storage/' . $relativeLicensePath),
                     ],
                     [
                         'access_token' => $token,
@@ -122,78 +226,157 @@ class TourGuideController extends Controller
         }
     }
 
-    public function loginTourGuide(Request $request)
-    {
-        try {
-            $validatedData = $request->validate([
-                'email' => 'required|string|email',
-                'password' => 'required|string'
-            ]);
+// public function loginTourGuide(Request $request)
+//     {
+//         try {
+//             $validatedData = $request->validate([
+//                 'email' => 'required|string|email',
+//                 'password' => 'required|string'
+//             ]);
 
-            // البحث عن المرشد السياحي
-            $tourGuide = User::where('email', $request->email)->first();
-             if (!$tourGuide) {
-                return response()->json([
-                    'message' => 'Invalid email'
-                ], 401);
-            }
-            // if (!$tourGuide || $tourGuide->type != 'guide') {
-            //     return response()->json([
-            //         'message' => 'You are not a tourist'
-            //     ], 401);
-            // }
-            // التحقق من وجود المرشد وصحة كلمة المرور
+//          $user = User::where('email', $request->email)->first();
 
-            if ( $tourGuide && !Hash::check($request->password, $tourGuide->password)) {
-                return response()->json([
-                    'message' => 'Invalid password'
-                ], 401);
-            }
+// if (!$user) {
+//     return response()->json([
+//         'message' => 'Invalid email'
+//     ], 401);
+// }
+//    if (!Hash::check($request->password, $user->password)) {
 
-            // إنشاء توكن جديد
-            $token = $tourGuide->createToken('tour_guide_auth_token')->plainTextToken;
-            $tourGuide->generateCode();
+//             return response()->json([
+//                 'message' => 'Invalid password'
+//             ], 401);
+//         }
 
-            // $tourGuide->notify(new TwoFactorCode());
+// switch ($user->type) {
+//     case 'guide':
+//           // إنشاء توكن جديد
+//             $token = $user->createToken('tour_guide_auth_token')->plainTextToken;
+//             $user->generateCode();
+
+//         break;
+
+//     case 'tourist':
+
+//         break;
+
+//     default:
+//         return response()->json([
+//             'message' => 'Invalid user type'
+//         ], 401);
+// }
 
 
-            return response()->json([
-                'message' => 'Login successful',
-                'tour_guide' => [
-                    //user
-                    'id' => $tourGuide->id,
-                    'user_name' => $tourGuide->user_name,
-                    'name' => $tourGuide->first_name . ' ' . $tourGuide->last_name,
-                    'email' => $tourGuide->email,
-                    'type' => $tourGuide->type,
-                    'phone_number' => $tourGuide->phone_number,
-                    'gender' => $tourGuide->gender,
-                    'profile_image' => $tourGuide->guide_picture_path ? asset('storage/' . $tourGuide->guide_picture_path) : null,
-                    'birth_date' => $tourGuide->birth_date,
-                    //tour guide
-                    'years_of_experience' => $tourGuide->years_of_experience,
-                    'languages' => $tourGuide->languages,
-                    'license_picture_path' => $tourGuide->license_picture_path,
-                    'cv_path' => $tourGuide->cv_path,
-                    // 'guide_picture_path' => $tourGuide->guide_picture_path
 
-                ],
-                'access_token' => $token,
-                'token_type' => 'Bearer'
-            ], 200);
+//             // $tourGuide->notify(new TwoFactorCode());
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Login failed',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+
+//             return response()->json([
+//                 'message' => 'Login successful',
+//                 'tour_guide' => [
+//                     //user
+//                     'id' => $tourGuide->id,
+//                     'user_name' => $tourGuide->user_name,
+//                     'name' => $tourGuide->first_name . ' ' . $tourGuide->last_name,
+//                     'email' => $tourGuide->email,
+//                     'type' => $tourGuide->type,
+//                     'phone_number' => $tourGuide->phone_number,
+//                     'gender' => $tourGuide->gender,
+//                     'profile_image' => $tourGuide->guide_picture_path ? asset('storage/' . $tourGuide->guide_picture_path) : null,
+//                     'birth_date' => $tourGuide->birth_date,
+//                     //tour guide
+//                     'years_of_experience' => $tourGuide->years_of_experience,
+//                     'languages' => $tourGuide->languages,
+//                     'license_picture_path' => $tourGuide->license_picture_path,
+//                     'cv_path' => $tourGuide->cv_path,
+//                 ],
+//                 'access_token' => $token,
+//                 'token_type' => 'Bearer'
+//             ], 200);
+
+//         } catch (\Illuminate\Validation\ValidationException $e) {
+//             return response()->json([
+//                 'message' => 'Validation failed',
+//                 'errors' => $e->errors()
+//             ], 422);
+//         } catch (\Exception $e) {
+//             return response()->json([
+//                 'message' => 'Login failed',
+//                 'error' => $e->getMessage()
+//             ], 500);
+//         }
+//     }
+
+    // public function loginTourGuide(Request $request)
+    // {
+    //     try {
+    //         $validatedData = $request->validate([
+    //             'email' => 'required|string|email',
+    //             'password' => 'required|string'
+    //         ]);
+
+    //         // البحث عن المرشد السياحي
+    //         $tourGuide = User::where('email', $request->email)->first();
+    //         if (!$tourGuide) {
+    //             return response()->json([
+    //                 'message' => 'Invalid email'
+    //             ], 401);
+    //         }
+    //         // if (!$tourGuide || $tourGuide->type != 'guide') {
+    //         //     return response()->json([
+    //         //         'message' => 'You are not a tourist'
+    //         //     ], 401);
+    //         // }
+    //         // التحقق من وجود المرشد وصحة كلمة المرور
+
+    //         if ($tourGuide && !Hash::check($request->password, $tourGuide->password)) {
+    //             return response()->json([
+    //                 'message' => 'Invalid password'
+    //             ], 401);
+    //         }
+
+    //         // إنشاء توكن جديد
+    //         $token = $tourGuide->createToken('tour_guide_auth_token')->plainTextToken;
+    //         $tourGuide->generateCode();
+
+    //         // $tourGuide->notify(new TwoFactorCode());
+
+
+    //         return response()->json([
+    //             'message' => 'Login successful',
+    //             'tour_guide' => [
+    //                 //user
+    //                 'id' => $tourGuide->id,
+    //                 'user_name' => $tourGuide->user_name,
+    //                 'name' => $tourGuide->first_name . ' ' . $tourGuide->last_name,
+    //                 'email' => $tourGuide->email,
+    //                 'type' => $tourGuide->type,
+    //                 'phone_number' => $tourGuide->phone_number,
+    //                 'gender' => $tourGuide->gender,
+    //                 'profile_image' => $tourGuide->guide_picture_path ? asset('storage/' . $tourGuide->guide_picture_path) : null,
+    //                 'birth_date' => $tourGuide->birth_date,
+    //                 //tour guide
+    //                 'years_of_experience' => $tourGuide->years_of_experience,
+    //                 'languages' => $tourGuide->languages,
+    //                 'license_picture_path' => $tourGuide->license_picture_path,
+    //                 'cv_path' => $tourGuide->cv_path,
+    //             ],
+    //             'access_token' => $token,
+    //             'token_type' => 'Bearer'
+    //         ], 200);
+
+    //     } catch (\Illuminate\Validation\ValidationException $e) {
+    //         return response()->json([
+    //             'message' => 'Validation failed',
+    //             'errors' => $e->errors()
+    //         ], 422);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Login failed',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
 
 

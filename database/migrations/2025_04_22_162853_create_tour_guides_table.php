@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('years_of_experience');
             $table->string('license_picture_path'); // Path to stored license image (png)
             $table->string('cv_path'); // Path to stored CV file (pdf)
-            // $table->string('guide_picture_path'); // Path to guide's profile picture
             $table->boolean('confirmByAdmin'); // Path to guide's profile picture
             $table->rememberToken(); // Important for authentication
             $table->timestamps();

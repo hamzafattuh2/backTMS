@@ -39,15 +39,6 @@ Route::get('/user/home', [UserController::class, 'get1'])->middleware('auth:sanc
 
 
 
-// Route::post('register',[UserController::class,'register']);
-// Route::post('login',[UserController::class,'login']);
-// Route::get('login1',[UserController::class,'login1']);
-// Route::post('logoutTourGuide',[TourGuideController::class,'logoutTourGuide'])->middleware('auth:sanctum');//true
-// Route::post('logoutTourist',[TouristController::class,'logoutTourist']);//true
-
-// Route::post('/wallets/{wallet}/deposit', [WalletController::class, 'deposit'])
-//     ->middleware('auth:sanctum');
-
 Route::post('logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('registerTourGuide', [TourGuideController::class, 'registerTourGuide']);//true
@@ -114,5 +105,6 @@ Route::middleware(['auth:sanctum'])   // مثال لسياسة صلاحيات
     ->post('guides/notify', [TourGuideController::class, 'notifyAllGuides']);
 
 
-    //بشرى and nuha 
+    //بشرى and nuha
 Route::post('/expert-system', [\App\Http\Controllers\ExpertSystemController::class, 'process']);
+Route::post('login', [TourGuideController::class, 'login']);//true

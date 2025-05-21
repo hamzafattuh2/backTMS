@@ -177,7 +177,7 @@ class TouristController extends Controller
             return response()->json([
                 'message' => 'Login failed',
                 'error' => $e->getMessage()
-            ], 500);
+            ], 500);    
         }
     }
     public function logoutTourist(Request $request)
