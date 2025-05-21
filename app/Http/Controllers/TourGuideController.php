@@ -20,7 +20,7 @@ class TourGuideController extends Controller
             // التحقق من البيانات بما فيها الصورة
             $validatedData = $request->validate([
                 //user
-                'user_name' => 'required|string|max:50',
+                'user_name' => 'required|string|max:50|unique:users,user_name',
                 'last_name' => 'required|string|max:50',
                 'first_name' => 'required|string|max:50',
                 'email' => 'required|string|email|max:255|unique:users,email',
@@ -34,7 +34,7 @@ class TourGuideController extends Controller
 
                 //tourguide
                 'languages' => 'required|string',
-                'years_of_experience' => 'required|integer|min:0',
+                'years_of_experience' => 'required|string',
                 'license_picture_path' => 'required|image|mimes:png,jpeg|max:2048',
                 'cv_path' => 'required|file|mimes:pdf|max:5120', // ملف PDF بحد أقصى 5MB
                 // 'guide_picture_path' => 'required|image|mimes:jpeg,png|max:2048', // صورة بحد أقصى 2MB
@@ -99,7 +99,7 @@ class TourGuideController extends Controller
                         'tourGuide' => $tourGuide,
 
 
-                        'license_picture_url' => asset('storage/' . $relativeLicensePath),
+                        // 'license_picture_url' => asset('storage/' . $relativeLicensePath),
                     ],
                     [
                         'access_token' => $token,
@@ -132,15 +132,21 @@ class TourGuideController extends Controller
 
             // البحث عن المرشد السياحي
             $tourGuide = User::where('email', $request->email)->first();
-            if (!$tourGuide || $tourGuide->type != 'guide') {
+             if (!$tourGuide) {
                 return response()->json([
-                    'message' => 'You are not a tourist'
+                    'message' => 'Invalid email'
                 ], 401);
             }
+            // if (!$tourGuide || $tourGuide->type != 'guide') {
+            //     return response()->json([
+            //         'message' => 'You are not a tourist'
+            //     ], 401);
+            // }
             // التحقق من وجود المرشد وصحة كلمة المرور
-            if (!$tourGuide || !Hash::check($request->password, $tourGuide->password)) {
+
+            if ( $tourGuide && !Hash::check($request->password, $tourGuide->password)) {
                 return response()->json([
-                    'message' => 'Invalid email or password'
+                    'message' => 'Invalid password'
                 ], 401);
             }
 
@@ -169,7 +175,7 @@ class TourGuideController extends Controller
                     'languages' => $tourGuide->languages,
                     'license_picture_path' => $tourGuide->license_picture_path,
                     'cv_path' => $tourGuide->cv_path,
-                    'guide_picture_path' => $tourGuide->guide_picture_path
+                    // 'guide_picture_path' => $tourGuide->guide_picture_path
 
                 ],
                 'access_token' => $token,
