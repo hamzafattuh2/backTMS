@@ -28,7 +28,7 @@ class TripSeeder extends Seeder
         Trip::insert([
             [
                 'user_id' => $users[0]->id,
-                'guide_id' => $guide1 = $guide[0],
+                'guide_id' => $guide1->id,
                 'title' => 'Explore the Nile',
                 'description' => 'A 5-day journey exploring the beauty of the Nile River.',
                 'start_date' => now()->addDays(5),

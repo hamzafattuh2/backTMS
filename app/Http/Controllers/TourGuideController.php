@@ -35,9 +35,9 @@ class TourGuideController extends Controller
                 //tourguide
                 'languages' => 'required|string',
                 'years_of_experience' => 'required|integer|min:0',
-                'license_picture_path' => 'required|image|mimes:png|max:2048',
+                'license_picture_path' => 'required|image|mimes:png,jpeg|max:2048',
                 'cv_path' => 'required|file|mimes:pdf|max:5120', // ملف PDF بحد أقصى 5MB
-                'guide_picture_path' => 'required|image|mimes:jpeg,png|max:2048', // صورة بحد أقصى 2MB
+                // 'guide_picture_path' => 'required|image|mimes:jpeg,png|max:2048', // صورة بحد أقصى 2MB
             ]);
 
             if ($request->hasFile('profile_image')) {
@@ -53,8 +53,8 @@ class TourGuideController extends Controller
             $cvPath = $request->file('cv_path')->store('public/cvs');
             $relativeCvPath = str_replace('public/', '', $cvPath);
 
-            $guidePicturePath = $request->file('guide_picture_path')->store('public/guide_pictures');
-            $relativeGuidePicturePath = str_replace('public/', '', $guidePicturePath);
+            // $guidePicturePath = $request->file('guide_picture_path')->store('public/guide_pictures');
+            // $relativeGuidePicturePath = str_replace('public/', '', $guidePicturePath);
 
             //add new user
             $user = User::create([
@@ -80,7 +80,7 @@ class TourGuideController extends Controller
                 'years_of_experience' => $validatedData['years_of_experience'],
                 'license_picture_path' => $relativeLicensePath,
                 'cv_path' => $relativeCvPath, // تمت إضافة هذا الحقل
-                'guide_picture_path' => $relativeGuidePicturePath, // تمت إضافة هذا الحقل
+                // 'guide_picture_path' => $relativeGuidePicturePath, // تمت إضافة هذا الحقل
                 'confirmByAdmin' => false,
             ]);
 
