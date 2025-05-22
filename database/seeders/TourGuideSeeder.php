@@ -42,10 +42,9 @@ class TourGuideSeeder extends Seeder
                                             'Spanish',
                                             'French,German'
                                         ]),
-                'years_of_experience' => fake()->numberBetween(1, 20),
+                'years_of_experience' => fake()->numberBetween(1, 20)."years",
                 'license_picture_path'=> 'licenses/'.fake()->uuid().'.png',
                 'cv_path'             => 'cvs/'.fake()->uuid().'.pdf',
-                'guide_picture_path'  => 'guides/'.fake()->uuid().'.jpg',
                 'confirmByAdmin'      => fake()->boolean(80), // 80 % confirmed
             ]);
         }

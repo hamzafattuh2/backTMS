@@ -39,7 +39,7 @@ Route::get('/user/home', [UserController::class, 'get1'])->middleware('auth:sanc
 
 
 
-Route::post('logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
+Route::get('logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('registerTourGuide', [TourGuideController::class, 'registerTourGuide']);//true
 Route::post('loginTourGuide', [TourGuideController::class, 'loginTourGuide']);//true
@@ -70,8 +70,10 @@ Route::middleware(['auth:sanctum', 'is_guide'])->group(function () {//الميد
 });
 
 
-Route::middleware(['auth:sanctum', 'is_tourist', 'confirm_password'])->group(function () {
+Route::middleware(['auth:sanctum', 'is_tourist'])->group(function () {
+    Route::get('tourist/profile', [TouristController::class, 'getProfile']); // جلب البيانات
     Route::put('tourist/profile', [TouristController::class, 'updateProfile']);
+
 });//شغال مية مية بس لازم يكون الباسورد فيه سترينغ انا حطيته بس بدون ما يتاكد من الباسورد
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -107,4 +109,4 @@ Route::middleware(['auth:sanctum'])   // مثال لسياسة صلاحيات
 
     //بشرى and nuha
 Route::post('/expert-system', [\App\Http\Controllers\ExpertSystemController::class, 'process']);
-Route::post('login', [TourGuideController::class, 'login']);//true
+Route::post('login', [TourGuideController::class, 'login']);//latih

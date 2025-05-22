@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB; // أضف هذا السطر
 use Illuminate\Support\Facades\Hash; // أضف هذا السطر
 use Illuminate\Http\Request;
 use App\Notifications\TwoFactorCode;
-
+use Illuminate\Support\Facades\Storage;
 
 class TouristController extends Controller
 {
@@ -34,8 +34,9 @@ class TouristController extends Controller
 
                 //tourist
                 'nationality' => 'required|string|max:100',//1
-                // 'emergency_contact' => 'required|string|max:20',//4
                 'special_needs' => 'nullable|string',//3
+
+
             ]);
 
 
@@ -72,7 +73,6 @@ class TouristController extends Controller
             $tourist = Tourist::create([
                 'user_id' => $user->id,
                 'nationality' => $validatedData['nationality'],
-                // 'emergency_contact' => $validatedData['emergency_contact'],
                 'special_needs' => $validatedData['special_needs'] ?? null,
             ]);
             $wallet = Wallet::create(
@@ -177,7 +177,7 @@ class TouristController extends Controller
             return response()->json([
                 'message' => 'Login failed',
                 'error' => $e->getMessage()
-            ], 500);    
+            ], 500);
         }
     }
     public function logoutTourist(Request $request)
@@ -187,36 +187,87 @@ class TouristController extends Controller
         return response()->json(['message' => 'Logout successful']);
     }
 
-    public function updateProfile(Request $request)
-    {
-        $user = $request->user();
-        $validated = $request->validate([
-            'current_password' => 'required',
-            'user_name' => 'sometimes|string|max:50',
-            'first_name' => 'sometimes|string|max:50',
-            'last_name' => 'sometimes|string|max:50',
-            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
-            'phone_number' => 'sometimes|string|max:20',
-            'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'gender' => 'sometimes|in:male,female',
-            'birth_date' => 'sometimes|date',
-            // tourist fields
-            'nationality' => 'sometimes|string|max:100',
-            'emergency_contact' => 'sometimes|string|max:20',
-            'special_needs' => 'nullable|string',
-        ]);
-        // أزل كلمة السر بعد أن تم التحقق منها في الميدل وير
-        unset($validated['current_password']);
+public function updateProfile(Request $request)
+{
+    $user = $request->user();
 
-        if ($request->hasFile('profile_image')) {
-            $path = $request->file('profile_image')->store('public/profile_image');
-            $validated['profile_image'] = str_replace('public/', '', $path);
-        }
-        $user->update($validated);
-        if ($user->tourist) {
-            $user->tourist->update($validated);
-        }
-        return response()->json(['message' => 'Profile updated', 'user' => $user->fresh()]);
+    $validated = $request->validate([
+        'new_password' => 'sometimes|string|min:8|confirmed',
+        'user_name' => 'sometimes|string|max:50|unique:users,user_name,'.$user->id,
+        'first_name' => 'sometimes|string|max:50',
+        'last_name' => 'sometimes|string|max:50',
+        'phone_number' => 'sometimes|string|max:20',
+        'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
+        'gender' => 'sometimes|in:male,female',
+        'birth_date' => 'sometimes|date',
+        'nationality' => 'sometimes|string|max:100',
+        'special_needs' => 'nullable|string',
+    ]);
+
+    if ($request->has('new_password')) {
+        $validated['password'] = Hash::make($validated['new_password']);
+        unset($validated['new_password']);
     }
 
+    if ($request->hasFile('profile_image')) {
+        $path = $request->file('profile_image')->store('public/profile_images');
+        $validated['profile_image'] = str_replace('public/', '', $path);
+
+        if ($user->profile_image) {
+            Storage::delete('public/'.$user->profile_image);
+        }
+    }
+    $user->update([
+        'first_name' => $validated['first_name'] ?? $user->first_name,
+        'last_name' => $validated['last_name'] ?? $user->last_name,
+        'password' => $validated['password'] ?? $user->password,
+        'phone_number' => $validated['phone_number'] ?? $user->phone_number,
+        'profile_image' => $validated['profile_image'] ?? $user->profile_image,
+        'gender' => $validated['gender'] ?? $user->gender,
+        'birth_date' => $validated['birth_date'] ?? $user->birth_date,
+    ]);
+    // $user->update($validated);
+
+    // if ($user->tourist) {
+    //     $user->tourist->update($validated);
+    // }
+    if ($user->tourist) {
+        $user->tourist->update([
+            'nationality' => $validated['nationality'] ?? $user->tourist->nationality,
+            'special_needs' => $validated['special_needs'] ?? $user->tourist->special_needs,
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'تم تحديث الملف الشخصي بنجاح',
+        'user' => $user->fresh()
+    ]);
+}
+
+public function getProfile(Request $request)
+{
+    $user = $request->user();
+
+    $response = [
+        'user_name' => $user->user_name,
+        'first_name' => $user->first_name,
+        'last_name' => $user->last_name,
+        'email' => $user->email,
+        'phone_number' => $user->phone_number,
+        'profile_image' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
+        'gender' => $user->gender,
+        'birth_date' => $user->birth_date,
+    ];
+
+    // إذا كان المستخدم سائحاً، نضيف حقول السياح
+    if ($user->tourist) {
+        $response['nationality'] = $user->tourist->nationality;
+        $response['special_needs'] = $user->tourist->special_needs;
+    }
+
+    return response()->json([
+        'message' => 'تم جلب بيانات الملف الشخصي بنجاح',
+        'data' => $response
+    ]);
+}
 }
