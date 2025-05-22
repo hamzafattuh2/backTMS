@@ -42,10 +42,10 @@ Route::get('/user/home', [UserController::class, 'get1'])->middleware('auth:sanc
 Route::get('logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('registerTourGuide', [TourGuideController::class, 'registerTourGuide']);//true
-Route::post('loginTourGuide', [TourGuideController::class, 'loginTourGuide']);//true
+// Route::post('loginTourGuide', [TourGuideController::class, 'loginTourGuide']);//for delete
 
 Route::post('registerTourist', [TouristController::class, 'registerTourist']);
-Route::post('loginTourist', [TouristController::class, 'loginTourist']);//true
+// Route::post('loginTourist', [TouristController::class, 'loginTourist']);//for delte
 
 Route::prefix('wallets')->group(function () {
     Route::post('/deposit', [WalletController::class, 'deposit'])->middleware('auth:sanctum');
@@ -53,7 +53,7 @@ Route::prefix('wallets')->group(function () {
 
 
 Route::middleware(['auth:sanctum', 'is_guide'])->group(function () {//الميدل وير التاني تبع الايز غايد مو شغال ما يقرءه
-    Route::post('guide/logout', [GuideController::class, 'logoutGuide']); // شغال بس منستخدم لوغ اوت العادية تبع اليوزر كونترولر
+    // Route::post('guide/logout', [GuideController::class, 'logoutGuide']); // شغال بس منستخدم لوغ اوت العادية تبع اليوزر كونترولر
     Route::post('trips/{trip}/offer-price', [TripController::class, 'offerPrice']);
 
     Route::get('guide/trips/private/completed', [TripController::class, 'guideCompletedPrivateTrips']);//شغال مية مية
@@ -72,7 +72,7 @@ Route::middleware(['auth:sanctum', 'is_guide'])->group(function () {//الميد
 
 Route::middleware(['auth:sanctum', 'is_tourist'])->group(function () {
     Route::get('tourist/profile', [TouristController::class, 'getProfile']); // جلب البيانات
-    Route::put('tourist/profile', [TouristController::class, 'updateProfile']);
+    Route::post('tourist/profile/update', [TouristController::class, 'updateProfile']);
 
 });//شغال مية مية بس لازم يكون الباسورد فيه سترينغ انا حطيته بس بدون ما يتاكد من الباسورد
 
@@ -109,4 +109,4 @@ Route::middleware(['auth:sanctum'])   // مثال لسياسة صلاحيات
 
     //بشرى and nuha
 Route::post('/expert-system', [\App\Http\Controllers\ExpertSystemController::class, 'process']);
-Route::post('login', [TourGuideController::class, 'login']);//latih
+Route::post('login', [TourGuideController::class, 'login']);//lat

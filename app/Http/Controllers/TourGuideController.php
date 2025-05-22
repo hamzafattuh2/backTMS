@@ -225,7 +225,7 @@ public function login(Request $request)
             ], 500);
         }
     }
-
+//for delete 
 // public function loginTourGuide(Request $request)
 //     {
 //         try {

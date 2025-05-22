@@ -95,7 +95,7 @@ class GuideController extends Controller
 
         return response()->json($suggestions);
     }
-   
+
      public function confirm(Request $request): JsonResponse
     {
         /*-------------------------------------------------
@@ -231,10 +231,10 @@ class GuideController extends Controller
             'token_type' => 'Bearer'
         ], 200);
     }
-    public function logoutGuide(Request $request)
-    {
-        $user = $request->user();
-        $user->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logout successful']);
-    }
+    // public function logoutGuide(Request $request)
+    // {
+    //     $user = $request->user();
+    //     $user->currentAccessToken()->delete();
+    //     return response()->json(['message' => 'Logout successful']);
+    // }
 }
