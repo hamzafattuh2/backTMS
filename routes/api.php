@@ -10,6 +10,7 @@ use App\Http\Controllers\BookingHotelController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripPriceSuggestionController;
+use App\Http\Controllers\TouristSiteController;
 
 
 
@@ -110,3 +111,8 @@ Route::middleware(['auth:sanctum'])   // مثال لسياسة صلاحيات
     //بشرى and nuha
 Route::post('/expert-system', [\App\Http\Controllers\ExpertSystemController::class, 'process']);
 Route::post('login', [TourGuideController::class, 'login']);//lat
+
+
+Route::get('/popular-sites', [TouristSiteController::class, 'popularSites']);
+Route::get('/sites/category/{category}', [TouristSiteController::class, 'sitesByCategory']);
+Route::get('/tourist-sites/{id}', [TouristSiteController::class, 'getSiteDetails']);

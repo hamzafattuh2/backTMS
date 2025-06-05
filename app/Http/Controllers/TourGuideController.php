@@ -36,25 +36,21 @@ public function login(Request $request)
         switch ($user->type) {
             case 'guide':
 
-                // if (!$user->tourGuide || $user->tourGuide->confirmByAdmin !== true) {
-                //     return response()->json([
-                //         'message' => 'Guide account not approved by admin'
-                //     ], 403);
-                // }
+
                  if (!$user->tourGuide) {
         return response()->json([
             'message' => 'Guide profile not completed'
         ], 403);
     }
 
-    if ($user->tourGuide->confirmByAdmin == 0) {
+    if ($user->tourGuide->confirmByAdmin == 2) {
         return response()->json([
-            'message' => 'wait'
+            'message' => 'Please wait while the admin reviews your application'
         ], 403);
     }
-    elseif ($user->tourGuide->confirmByAdmin == 2) {
+    elseif ($user->tourGuide->confirmByAdmin == 0) {
         return response()->json([
-            'message' => 'Guide account not approved by admin'
+            'message' => 'We regret to inform you that your application has been rejected'
         ], 403);
     }
 
@@ -73,10 +69,10 @@ public function login(Request $request)
                         'gender' => $user->gender,
                         'profile_image' => $user->guide_picture_path ? asset('storage/' . $user->guide_picture_path) : null,
                         'birth_date' => $user->birth_date,
-                        'years_of_experience' => $user->years_of_experience,
-                        'languages' => $user->languages,
-                        'license_picture_path' => $user->license_picture_path,
-                        'cv_path' => $user->cv_path,
+                        'years_of_experience' => $user->tourGuide->years_of_experience,
+                        'languages' => $user->tourGuide->languages,
+                        'license_picture_path' => $user->tourGuide->license_picture_path,
+                        'cv_path' =>$user->tourGuide->cv_path,
                     ],
                     'access_token' => $token,
                     'token_type' => 'Bearer'
@@ -99,7 +95,7 @@ public function login(Request $request)
                         'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
                         'birth_date' => $user->birth_date,
                         'nationality' => $user->tourist->nationality ?? null,
-                        'special_needs' => $user->tourist->special_needs ?? null,
+                     
                         'emergency_contact' => $user->tourist->emergency_contact ?? null,
                     ],
                     'access_token' => $token,
@@ -225,7 +221,7 @@ public function login(Request $request)
             ], 500);
         }
     }
-//for delete 
+//for delete
 // public function loginTourGuide(Request $request)
 //     {
 //         try {

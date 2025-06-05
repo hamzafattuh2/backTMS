@@ -39,14 +39,12 @@ class TouristSeeder extends Seeder
         Tourist::create([
             'user_id' => $user1->id,
             'nationality' => 'Egyptian',
-            'special_needs' => 'Wheelchair access required',
             'emergency_contact' => '+201112223334',
         ]);
 
         Tourist::create([
             'user_id' => $user2->id,
             'nationality' => 'American',
-            'special_needs' => 'Vegetarian meals',
             'emergency_contact' => '+201445556667',
         ]);
 
@@ -66,7 +64,6 @@ class TouristSeeder extends Seeder
         Tourist::create([
             'user_id' => $user3->id,
             'nationality' => 'Japanese',
-            'special_needs' => 'Allergic to peanuts',
             'emergency_contact' => '+81987654321',
         ]);
     }

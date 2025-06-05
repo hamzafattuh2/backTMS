@@ -34,7 +34,7 @@ class TouristController extends Controller
 
                 //tourist
                 'nationality' => 'required|string|max:100',//1
-                'special_needs' => 'nullable|string',//3
+
 
 
             ]);
@@ -73,7 +73,7 @@ class TouristController extends Controller
             $tourist = Tourist::create([
                 'user_id' => $user->id,
                 'nationality' => $validatedData['nationality'],
-                'special_needs' => $validatedData['special_needs'] ?? null,
+
             ]);
             $wallet = Wallet::create(
                 [
@@ -160,7 +160,6 @@ class TouristController extends Controller
     //                 'birth_date' => $tourist->birth_date,
     //                 //tourist
     //                 //     , 'nationality'=>$tourist->nationality,
-    //                 //    , 'special_needs'=>$tourist->special_needs,
     //                 //    , 'emergency_contact'=>$tourist->emergency_contact,
 
     //             ],
@@ -201,7 +200,6 @@ class TouristController extends Controller
 //         'gender' => 'sometimes|in:male,female',
 //         'birth_date' => 'sometimes|date',
 //         'nationality' => 'sometimes|string|max:100',
-//         'special_needs' => 'nullable|string',
 //     ]);
 
 //     if ($request->has('new_password')) {
@@ -234,7 +232,6 @@ class TouristController extends Controller
 //     if ($user->tourist) {
 //         $user->tourist->update([
 //             'nationality' => $validated['nationality'] ?? $user->tourist->nationality,
-//             'special_needs' => $validated['special_needs'] ?? $user->tourist->special_needs,
 //         ]);
 //     }
 
@@ -262,7 +259,6 @@ public function updateProfile(Request $request)
         'gender' => 'sometimes|in:male,female',
         'birth_date' => 'sometimes|date',
         'nationality' => 'sometimes|string|max:100',
-        'special_needs' => 'nullable|string',
     ]);
 
     $updatedFields = [];
@@ -302,7 +298,6 @@ public function updateProfile(Request $request)
 
     $touristData = array_filter([
         'nationality' => $textData['nationality'] ?? null,
-        'special_needs' => $textData['special_needs'] ?? null,
     ]);
 
     // تحقق إذا لا يوجد أي شيء لتحديثه
@@ -350,7 +345,6 @@ public function getProfile(Request $request)
     // إذا كان المستخدم سائحاً، نضيف حقول السياح
     if ($user->tourist) {
         $response['nationality'] = $user->tourist->nationality;
-        $response['special_needs'] = $user->tourist->special_needs;
     }
 
     return response()->json([

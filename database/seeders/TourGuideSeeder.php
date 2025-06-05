@@ -24,7 +24,7 @@ class TourGuideSeeder extends Seeder
                 'first_name'    => fake()->firstName,
                 'last_name'     => fake()->lastName,
                 'email'         => fake()->unique()->safeEmail,
-                'password'      => Hash::make('password'),   // كلمة مرور افتراضيّة
+                'password'      => Hash::make('12345678'),   // كلمة مرور افتراضيّة
                 'type'          => 'guide',
                 'phone_number'  => fake()->phoneNumber,
                 'gender'        => fake()->randomElement(['male', 'female']),
@@ -45,7 +45,7 @@ class TourGuideSeeder extends Seeder
                 'years_of_experience' => fake()->numberBetween(1, 20)."years",
                 'license_picture_path'=> 'licenses/'.fake()->uuid().'.png',
                 'cv_path'             => 'cvs/'.fake()->uuid().'.pdf',
-                'confirmByAdmin'      => fake()->boolean(80), // 80 % confirmed
+                'confirmByAdmin'      => 2, // 80 % confirmed
             ]);
         }
     }
