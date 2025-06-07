@@ -112,13 +112,17 @@ Route::middleware(['auth:sanctum'])   // مثال لسياسة صلاحيات
 Route::post('/expert-system', [\App\Http\Controllers\ExpertSystemController::class, 'process']);
 Route::post('login', [TourGuideController::class, 'login']);//lat
 
-
+Route::middleware('auth:sanctum')->group(function () {
 Route::get('/popular-sites', [TouristSiteController::class, 'popularSites']);
 Route::get('/sites/category/{category}', [TouristSiteController::class, 'sitesByCategory']);
 Route::get('/tourist-sites/{id}', [TouristSiteController::class, 'getSiteDetails']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });
+Route::middleware('auth:sanctum')->post('/trips', [TripController::class, 'store']);
+
+Route::middleware('auth:sanctum')->post('/trips/confirm-by-guide', [TripController::class, 'confirmByGuide']);

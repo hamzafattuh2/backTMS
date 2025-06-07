@@ -14,11 +14,8 @@ class TripSeeder extends Seeder
     {
         // التأكد من وجود مستخدمين لاستخدامهم كـ user_id و guide_id
         $users = User::take(1)->get();
-    $guide = TourGuide::take(2)->get();
-        // if ($users->count() < 3) {
-        //     $this->command->info('Please seed at least 3 users before running TripSeeder.');
-        //     return;
-        // }
+        $guide = TourGuide::take(2)->get();
+
 
         $user1 = $users[0]; // السائح
         $guide1 = $guide[0]; // مرشد صحيح
@@ -33,7 +30,7 @@ class TripSeeder extends Seeder
                 'description' => 'A 5-day journey exploring the beauty of the Nile River.',
                 'start_date' => now()->addDays(5),
                 'end_date' => now()->addDays(10),
-                'language_guide' => 'English',
+                'languageOfTrip' => 'English',
                 'days_count' => 5,
                 'price' => 1200.00,
                 'status' => 'upcoming',
@@ -49,7 +46,7 @@ class TripSeeder extends Seeder
                 'description' => 'tripsWithoutGuide',
                 'start_date' => now()->addDays(15),
                 'end_date' => now()->addDays(17),
-                'language_guide' => 'Arabic',
+                'languageOfTrip' => 'Arabic',
                 'days_count' => 2,
                 'price' => 800.00,
                 'status' => 'pending',
@@ -65,7 +62,7 @@ class TripSeeder extends Seeder
                 'description' => 'tripsWithoutGuide',
                 'start_date' => now()->addDays(15),
                 'end_date' => now()->addDays(17),
-                'language_guide' => 'Arabic',
+                'languageOfTrip' => 'Arabic',
                 'days_count' => 2,
                 'price' => 800.00,
                 'status' => 'waiting_guide',
@@ -81,7 +78,7 @@ class TripSeeder extends Seeder
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
                 'end_date' => now()->addDays(14),
-                'language_guide' => 'Arabic',
+                'languageOfTrip' => 'Arabic',
                 'days_count' => 2,
                 'price' => 800.00,
                 'status' => 'ongoing',
@@ -97,7 +94,7 @@ class TripSeeder extends Seeder
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
                 'end_date' => now()->addDays(14),
-                'language_guide' => 'Arabic',
+                'languageOfTrip' => 'Arabic',
                 'days_count' => 2,
                 'price' => 800.00,
                 'status' => 'ongoing',
@@ -113,7 +110,7 @@ class TripSeeder extends Seeder
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
                 'end_date' => now()->addDays(14),
-                'language_guide' => 'Arabic',
+                'languageOfTrip' => 'Arabic',
                 'days_count' => 2,
                 'price' => 800.00,
                 'status' => 'ongoing',
@@ -129,7 +126,7 @@ class TripSeeder extends Seeder
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
                 'end_date' => now()->addDays(14),
-                'language_guide' => 'Arabic',
+                'languageOfTrip' => 'Arabic',
                 'days_count' => 2,
                 'price' => 800.00,
                 'status' => 'ongoing',
@@ -148,7 +145,7 @@ class TripSeeder extends Seeder
             'description' => 'Case 1: Trip is public',
             'start_date' => now()->addDays(1),
             'end_date' => now()->addDays(2),
-            'language_guide' => 'English',
+            'languageOfTrip' => 'English',
             'days_count' => 1,
             'price' => null,
             'status' => 'pending',
@@ -165,7 +162,7 @@ class TripSeeder extends Seeder
             'description' => 'Case 2: Guide already assigned and not current user',
             'start_date' => now()->addDays(3),
             'end_date' => now()->addDays(5),
-            'language_guide' => 'French',
+            'languageOfTrip' => 'French',
             'days_count' => 2,
             'price' => null,
             'status' => 'pending',
@@ -182,7 +179,7 @@ class TripSeeder extends Seeder
             'description' => 'Case 3: Price already set in trip',
             'start_date' => now()->addDays(4),
             'end_date' => now()->addDays(6),
-            'language_guide' => 'German',
+            'languageOfTrip' => 'German',
             'days_count' => 2,
             'price' => 900.00,
             'status' => 'pending',
@@ -199,7 +196,7 @@ class TripSeeder extends Seeder
             'description' => 'Case 4: Suggestion already accepted',
             'start_date' => now()->addDays(7),
             'end_date' => now()->addDays(10),
-            'language_guide' => 'Spanish',
+            'languageOfTrip' => 'Spanish',
             'days_count' => 3,
             'price' => null,
             'status' => 'pending',
@@ -225,7 +222,7 @@ class TripSeeder extends Seeder
             'description' => 'Case 5: Pending suggestion already exists',
             'start_date' => now()->addDays(8),
             'end_date' => now()->addDays(9),
-            'language_guide' => 'Arabic',
+            'languageOfTrip' => 'Arabic',
             'days_count' => 1,
             'price' => null,
             'status' => 'pending',
@@ -251,7 +248,7 @@ class TripSeeder extends Seeder
             'description' => 'Case 6: Success - Eligible to offer price',
             'start_date' => now()->addDays(10),
             'end_date' => now()->addDays(12),
-            'language_guide' => 'Italian',
+            'languageOfTrip' => 'Italian',
             'days_count' => 2,
             'price' => null,
             'status' => 'pending',

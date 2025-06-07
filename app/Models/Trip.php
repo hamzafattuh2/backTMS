@@ -11,9 +11,26 @@ class Trip extends Model
         'start_date' => 'datetime',
         'end_date'   => 'datetime',
     ];
+
     protected $fillable = [
-        'user_id', 'guide_id', 'title', 'description', 'start_date', 'end_date', 'language_guide', 'days_count', 'price', 'status', 'public_or_private', 'delete_able'
-    ];
+    'user_id',
+    'guide_id',
+    'title',
+    'description',
+    'start_date',
+    'end_date',
+    'languageOfTrip',
+    'days_count',
+    'price',
+    'status',
+    'public_or_private',
+    'delete_able',
+    'confirm_by_guide',
+];
+
+    // protected $fillable = [
+    //     'user_id', 'guide_id', 'title', 'description', 'start_date', 'end_date', 'language_guide', 'days_count', 'price', 'status', 'public_or_private', 'delete_able'
+    // ];
     // App\Models\Trip.php
 public function priceSuggestions()
 {

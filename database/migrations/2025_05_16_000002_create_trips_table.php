@@ -8,20 +8,28 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('trips', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('guide_id')->nullable()->constrained('tour_guides')->onDelete('set null');
-            $table->string('title');
-            $table->text('description');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->string('language_guide');
-            $table->integer('days_count');
-            $table->decimal('price', 10, 2)->nullable();
-            $table->string('status');
-            $table->enum('public_or_private', ['public', 'private']);
-            $table->boolean('delete_able')->default(true);
-            $table->timestamps();
+           
+             $table->id();
+    $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+    $table->foreignId('guide_id')->nullable()->constrained('tour_guides')->onDelete('set null');
+
+    $table->string('title')->nullable(); // تعديل: جعل العنوان nullable
+    $table->text('description');
+
+    $table->dateTime('start_date');
+    $table->dateTime('end_date')->nullable(); // تعديل: جعل تاريخ النهاية nullable
+
+    $table->string('languageOfTrip');
+    $table->integer('days_count');
+    $table->decimal('price', 10, 2)->nullable();
+
+    $table->string('status')->nullable(); // تعديل: جعل الحالة nullable
+
+    $table->enum('public_or_private', ['public', 'private'])->nullable(); // تعديل: جعل النوع nullable
+
+    $table->boolean('delete_able')->default(true);
+    $table->boolean('confirm_by_Guide')->default(false );
+    $table->timestamps(); // ينصح بوجود timestamps للتتبع
         });
     }
     public function down(): void
