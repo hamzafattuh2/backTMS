@@ -39,13 +39,11 @@ class TouristSeeder extends Seeder
         Tourist::create([
             'user_id' => $user1->id,
             'nationality' => 'Egyptian',
-            'emergency_contact' => '+201112223334',
         ]);
 
         Tourist::create([
             'user_id' => $user2->id,
             'nationality' => 'American',
-            'emergency_contact' => '+201445556667',
         ]);
 
         // يمكنك إضافة المزيد من السياح هنا
@@ -64,7 +62,6 @@ class TouristSeeder extends Seeder
         Tourist::create([
             'user_id' => $user3->id,
             'nationality' => 'Japanese',
-            'emergency_contact' => '+81987654321',
         ]);
     }
 }

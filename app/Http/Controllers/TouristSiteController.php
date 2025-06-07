@@ -18,7 +18,6 @@ class TouristSiteController extends Controller
             ->get(['id', 'name', 'main_image', 'address', 'average_rating']);
 
         return response()->json([
-            'success' => true,
             'data' => $popularSites
         ]);
     }
@@ -32,7 +31,6 @@ class TouristSiteController extends Controller
 
         if (!in_array($category, $validCategories)) {
             return response()->json([
-                'success' => false,
                 'message' => 'Invalid category'
             ], 400);
         }
@@ -42,7 +40,6 @@ class TouristSiteController extends Controller
             ->get(['id', 'name', 'main_image', 'address', 'average_rating']);
 
         return response()->json([
-            'success' => true,
             'data' => $sites
         ]);
     }
@@ -57,7 +54,6 @@ public function getSiteDetails($id)
 
         if (!$site) {
             return response()->json([
-                'success' => false,
                 'message' => 'Tourist site not found'
             ], 404);
         }
@@ -65,7 +61,6 @@ public function getSiteDetails($id)
         $site->increment('views_count');
 
         return response()->json([
-            'success' => true,
             'data' => new TouristSiteResource($site)
         ]);
     // });

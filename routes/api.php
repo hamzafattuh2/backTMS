@@ -11,7 +11,7 @@ use App\Http\Controllers\GuideController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripPriceSuggestionController;
 use App\Http\Controllers\TouristSiteController;
-
+use App\Http\Controllers\Api\NotificationController;
 
 
 
@@ -116,3 +116,9 @@ Route::post('login', [TourGuideController::class, 'login']);//lat
 Route::get('/popular-sites', [TouristSiteController::class, 'popularSites']);
 Route::get('/sites/category/{category}', [TouristSiteController::class, 'sitesByCategory']);
 Route::get('/tourist-sites/{id}', [TouristSiteController::class, 'getSiteDetails']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+});

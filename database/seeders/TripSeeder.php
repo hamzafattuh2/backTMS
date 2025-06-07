@@ -76,7 +76,7 @@ class TripSeeder extends Seeder
             ],
             [
                 'user_id' => $users[0]->id,
-                'guide_id' => 6,
+                'guide_id' => $guide1->id,
                 'title' => 'ongoing trip public',
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
@@ -92,7 +92,7 @@ class TripSeeder extends Seeder
             ],
             [
                 'user_id' => $users[0]->id,
-                'guide_id' => 6,
+                'guide_id' => $guide2->id,
                 'title' => 'ongoing trip private',
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
@@ -108,7 +108,7 @@ class TripSeeder extends Seeder
             ],
             [
                 'user_id' => $users[0]->id,
-                'guide_id' => 6,
+                'guide_id' => $guide1->id,
                 'title' => 'guideCompletedPrivateTrips',
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),
@@ -124,7 +124,7 @@ class TripSeeder extends Seeder
             ],
             [
                 'user_id' => $users[0]->id,
-                'guide_id' => 6,
+                'guide_id' => $guide2->id,
                 'title' => 'guideCompletedPublicTrips',
                 'description' => 'Experience the thrill of the desert in this private tour.',
                 'start_date' => now()->addDays(11),

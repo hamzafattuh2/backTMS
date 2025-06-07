@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,17 +18,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    // protected $fillable = [
-    //     'name',
-    //     'email',
-    //     'password',
-    //     'type',
-    //     'phone_number',
-    //     'gender',
-    //     'profile_image'
-    // ,'code'
-    // ,'expire_at'
-    // ];
+
 
     protected $guarded = [];
 
@@ -77,5 +66,14 @@ class User extends Authenticatable
         $this->code = null;
         $this->expire_at = null;
         $this->save();
+    }
+     public function routeNotificationForMail()
+    {
+        return $this->email;
+    }
+
+    public function routeNotificationForSms()
+    {
+        return $this->phone; // إذا كنت تستخدم SMS
     }
 }

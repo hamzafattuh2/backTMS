@@ -12,236 +12,204 @@ use Illuminate\Support\Facades\Storage;
 
 class TouristController extends Controller
 {
-    public function registerTourist(Request $request)
-    {
-        try {
-            // التحقق من البيانات بما فيها الصورة
-            $validatedData = $request->validate([
-
-                //user
-                'user_name' => 'required|string|max:50|unique:users,user_name',
-                'last_name' => 'required|string|max:50',
-                'first_name' => 'required|string|max:50',
-                'email' => 'required|string|email|max:255|unique:users,email',
-                'password' => 'required|string|min:8|confirmed',
-                'phone_number' => 'required|string|max:20',
-                'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
-                'type' => 'nullable|string',
-                'gender' => 'required|in:male,female',
-                'birth_date' => 'required|date',//2
-
-
-
-                //tourist
-                'nationality' => 'required|string|max:100',//1
-
-
-
-            ]);
-
-
-            // بدء المعاملة لضمان سلامة البيانات
-            DB::beginTransaction();
-
-            // تخزين صورة الملف الشخصي إذا وجدت
-            $profilePicturePath = null;
-            if ($request->hasFile('profile_image')) {
-                $path = $request->file('profile_image')->store('public/profile_image');
-                $profilePicturePath = str_replace('public/', '', $path);
-            }
-
-            // إنشاء المستخدم في جدول users
-            $user = User::create([
-                'user_name' => $validatedData['user_name'],
-                'first_name' => $validatedData['first_name'],
-                'last_name' => $validatedData['last_name'],
-                'email' => $validatedData['email'],
-                'password' => Hash::make($validatedData['password']),
-                'type' => 'tourist',
-                'phone_number' => $validatedData['phone_number'],
-                'profile_image' => $profilePicturePath ?? null,
-                'gender' => $validatedData['gender'],
-                'birth_date' => $validatedData['birth_date'] ?? null,
-
-            ]);
-
-            $token = $user->createToken('tourist_auth_token')->plainTextToken;
-            $user->generateCode();
-
-            // $user->notify(new TwoFactorCode());
-            // إنشاء السائح في جدول tourists
-            $tourist = Tourist::create([
-                'user_id' => $user->id,
-                'nationality' => $validatedData['nationality'],
-
-            ]);
-            $wallet = Wallet::create(
-                [
-                    'user_id' => $user->id,
-                    'balance' => 0,
-                ]
-            );
-            // إتمام المعاملة
-            DB::commit();
-
-            return response()->json(
-                [
-                    [
-                        'message' => 'Tourist registered successfully',
-                        'user' => $user,
-                        'tourist' => $tourist,
-                        'profile_picture_url' => $profilePicturePath ? asset('storage/' . $profilePicturePath) : null
-                    ],
-                    [
-                        'access_token' => $token,
-                        'token_type' => 'Bearer'
-                    ]
-                ],
-                201
-            );
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Registration failed',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-    //for delete
-    // public function loginTourist(Request $request)
+    // public function registerTourist(Request $request)
     // {
     //     try {
+    //         // التحقق من البيانات بما فيها الصورة
     //         $validatedData = $request->validate([
-    //             'email' => 'required|string|email',
-    //             'password' => 'required|string'
+
+    //             //user
+    //             'user_name' => 'required|string|max:50|unique:users,user_name',
+    //             'last_name' => 'required|string|max:50',
+    //             'first_name' => 'required|string|max:50',
+    //             'email' => 'required|string|email|max:255|unique:users,email',
+    //             'password' => 'required|string|min:8|confirmed',
+    //             'phone_number' => 'required|string|max:20',
+    //             'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
+    //             'type' => 'nullable|string',
+    //             'gender' => 'required|in:male,female',
+    //             'birth_date' => 'required|date',//2
+
+
+
+    //             //tourist
+    //             'nationality' => 'required|string|max:100',//1
+
+
+
     //         ]);
 
-    //         // البحث عن المرشد السياحي
-    //         $tourist = User::where('email', $request->email)->first();
-    //         if (!$tourist || $tourist->type != 'tourist') {
-    //             return response()->json([
-    //                 'message' => 'You are not a tourist'
-    //             ], 401);
-    //         }
-    //         // التحقق من وجود المرشد وصحة كلمة المرور
-    //         if (!$tourist || !Hash::check($request->password, $tourist->password)) {
-    //             return response()->json([
-    //                 'message' => 'Invalid email or password'
-    //             ], 401);
-    //         }
 
+    //         // بدء المعاملة لضمان سلامة البيانات
+    //         DB::beginTransaction();
 
+    //         // تخزين صورة الملف الشخصي إذا وجدت
+    //         $profilePicturePath = null;
+    //     if ($request->hasFile('profile_image')) {
+    //         $path = $request->file('profile_image')->store(
+    //             'public/img_prof', // المسار الجديد
+    //             'public' // استخدام نظام الملفات public
+    //         );
+    //         $profilePicturePath = str_replace('public/', '', $path);
+    //     }
 
-    //         // إنشاء توكن جديد
-    //         $token = $tourist->createToken('tourist_auth_token')->plainTextToken;
-    //         $tourist->generateCode();
+    //         // إنشاء المستخدم في جدول users
+    //         $user = User::create([
+    //             'user_name' => $validatedData['user_name'],
+    //             'first_name' => $validatedData['first_name'],
+    //             'last_name' => $validatedData['last_name'],
+    //             'email' => $validatedData['email'],
+    //             'password' => Hash::make($validatedData['password']),
+    //             'type' => 'tourist',
+    //             'phone_number' => $validatedData['phone_number'],
+    //             'profile_image' => $profilePicturePath ?? null,
+    //             'gender' => $validatedData['gender'],
+    //             'birth_date' => $validatedData['birth_date'] ?? null,
 
-    //         // $tourist->notify(new TwoFactorCode());
+    //         ]);
 
-    //         return response()->json([
-    //             'message' => 'Login successful',
-    //             'tour_guide' => [
-    //                 //user
-    //                 'id' => $tourist->id,
-    //                 'user_name' => $tourist->user_name,
-    //                 'name' => $tourist->first_name . ' ' . $tourist->last_name,
-    //                 'email' => $tourist->email,
-    //                 'type' => $tourist->type,
-    //                 'phone_number' => $tourist->phone_number,
-    //                 'gender' => $tourist->gender,
-    //                 'profile_image' => $tourist->guide_picture_path ? asset('storage/' . $tourist->guide_picture_path) : null,
-    //                 'birth_date' => $tourist->birth_date,
-    //                 //tourist
-    //                 //     , 'nationality'=>$tourist->nationality,
-    //                 //    , 'emergency_contact'=>$tourist->emergency_contact,
+    //         $token = $user->createToken('tourist_auth_token')->plainTextToken;
+    //         $user->generateCode();
 
+    //         // $user->notify(new TwoFactorCode());
+    //         // إنشاء السائح في جدول tourists
+    //         $tourist = Tourist::create([
+    //             'user_id' => $user->id,
+    //             'nationality' => $validatedData['nationality'],
+
+    //         ]);
+    //         $wallet = Wallet::create(
+    //             [
+    //                 'user_id' => $user->id,
+    //                 'balance' => 0,
+    //             ]
+    //         );
+    //         // إتمام المعاملة
+    //         DB::commit();
+
+    //         return response()->json(
+    //             [
+    //                 [
+    //                     'message' => 'Tourist registered successfully',
+    //                     'user' => $user,
+    //                     'tourist' => $tourist,
+    //                    'profile_picture_url' => $profilePicturePath
+    //                 ? asset("storage/img_prof/" . basename($profilePicturePath))
+    //                 : null    ],
+    //                 [
+    //                     'access_token' => $token,
+    //                     'token_type' => 'Bearer'
+    //                 ]
     //             ],
-    //             'access_token' => $token,
-    //             'token_type' => 'Bearer'
-    //         ], 200);
+    //             201
+    //         );
 
     //     } catch (\Illuminate\Validation\ValidationException $e) {
+    //         DB::rollBack();
     //         return response()->json([
     //             'message' => 'Validation failed',
     //             'errors' => $e->errors()
     //         ], 422);
     //     } catch (\Exception $e) {
+    //         DB::rollBack();
     //         return response()->json([
-    //             'message' => 'Login failed',
+    //             'message' => 'Registration failed',
     //             'error' => $e->getMessage()
     //         ], 500);
     //     }
     // }
-    // public function logoutTourist(Request $request)
-    // {
-    //     $user = $request->user();
-    //     $user->currentAccessToken()->delete();
-    //     return response()->json(['message' => 'Logout successful']);
-    // }
+    //for delete
 
-// public function updateProfile(Request $request)
-// {
-//     $user = $request->user();
+public function registerTourist(Request $request)
+{
+    try {
+        // ✅ التحقق من البيانات
+        $validatedData = $request->validate([
+            // بيانات المستخدم
+            'user_name' => 'required|string|max:50|unique:users,user_name',
+            'last_name' => 'required|string|max:50',
+            'first_name' => 'required|string|max:50',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'phone_number' => 'required|string|max:20',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'gender' => 'required|in:male,female',
+            'birth_date' => 'required|date',
 
-//     $validated = $request->validate([
-//         'new_password' => 'sometimes|string|min:8|confirmed',
-//         'user_name' => 'sometimes|string|max:50|unique:users,user_name,'.$user->id,
-//         'first_name' => 'required  |string|max:50',
-//         'last_name' => 'sometimes|string|max:50',
-//         'phone_number' => 'sometimes|string|max:20',
-//         'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
-//         'gender' => 'sometimes|in:male,female',
-//         'birth_date' => 'sometimes|date',
-//         'nationality' => 'sometimes|string|max:100',
-//     ]);
+            // بيانات السائح
+            'nationality' => 'required|string|max:100',
+        ]);
 
-//     if ($request->has('new_password')) {
-//         $validated['password'] = Hash::make($validated['new_password']);
-//         unset($validated['new_password']);
-//     }
+        DB::beginTransaction();
 
-//     if ($request->hasFile('profile_image')) {
-//         $path = $request->file('profile_image')->store('public/profile_images');
-//         $validated['profile_image'] = str_replace('public/', '', $path);
+        // ✅ معالجة ورفع صورة الملف الشخصي (إن وجدت)
+        $profilePicturePath = null;
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+            $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
+            $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
+        }
 
-//         if ($user->profile_image) {
-//             Storage::delete('public/'.$user->profile_image);
-//         }
-//     }
-//     $user->update([
-//         'first_name' => $validated['first_name'] ?? $user->first_name,
-//         'last_name' => $validated['last_name'] ?? $user->last_name,
-//         'password' => $validated['password'] ?? $user->password,
-//         'phone_number' => $validated['phone_number'] ?? $user->phone_number,
-//         'profile_image' => $validated['profile_image'] ?? $user->profile_image,
-//         'gender' => $validated['gender'] ?? $user->gender,
-//         'birth_date' => $validated['birth_date'] ?? $user->birth_date,
-//     ]);
-//     // $user->update($validated);
+        // ✅ إنشاء المستخدم
+        $user = User::create([
+            'user_name' => $validatedData['user_name'],
+            'first_name' => $validatedData['first_name'],
+            'last_name' => $validatedData['last_name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+            'type' => 'tourist',
+            'phone_number' => $validatedData['phone_number'],
+            'profile_image' => $profilePicturePath,
+            'gender' => $validatedData['gender'],
+            'birth_date' => $validatedData['birth_date'],
+        ]);
 
-//     // if ($user->tourist) {
-//     //     $user->tourist->update($validated);
-//     // }
-//     if ($user->tourist) {
-//         $user->tourist->update([
-//             'nationality' => $validated['nationality'] ?? $user->tourist->nationality,
-//         ]);
-//     }
+        // ✅ إنشاء رمز التوكن
+        $token = $user->createToken('tourist_auth_token')->plainTextToken;
+        $user->generateCode();
 
-//     return response()->json([
-//         'message' => 'تم تحديث الملف الشخصي بنجاح',
-//         'user' => $user->fresh()
-//     ]);
-// }
+        // ✅ إنشاء السائح
+        $tourist = Tourist::create([
+            'user_id' => $user->id,
+            'nationality' => $validatedData['nationality'],
+        ]);
 
-//
+        // ✅ إنشاء المحفظة
+        Wallet::create([
+            'user_id' => $user->id,
+            'balance' => 0,
+        ]);
+
+        DB::commit();
+
+        // ✅ تحضير رابط الصورة (إن وجد)
+        $imageUrl = $profilePicturePath
+            ? asset('storage/' . $profilePicturePath)
+            : null;
+
+        return response()->json([
+            'message' => 'Tourist registered successfully',
+            'user' => $user,
+            'tourist' => $tourist,
+            'profile_picture_url' => $imageUrl,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Registration failed',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
 
 
 public function updateProfile(Request $request)
