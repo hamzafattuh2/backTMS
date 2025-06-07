@@ -199,7 +199,6 @@ class GuideController extends Controller
             'years_of_experience' => $validated['years_of_experience'],
             'license_picture_path' => $licensePath,
             'cv_path' => $cvPath,
-            // 'guide_picture_path' => $profilePicturePath,
         ]);
         $token = $user->createToken('guide_auth_token')->plainTextToken;
         return response()->json([

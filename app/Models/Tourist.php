@@ -13,7 +13,6 @@ class Tourist extends Model
         'user_id',
         'birth_date',
         'nationality',
-        'emergency_contact',
         'passport_number'
     ];
 

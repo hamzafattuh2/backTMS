@@ -67,7 +67,7 @@ public function login(Request $request)
                         'type' => $user->type,
                         'phone_number' => $user->phone_number,
                         'gender' => $user->gender,
-                        'profile_image' => $user->guide_picture_path ? asset('storage/' . $user->guide_picture_path) : null,
+                        'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
                         'birth_date' => $user->birth_date,
                         'years_of_experience' => $user->tourGuide->years_of_experience,
                         'languages' => $user->tourGuide->languages,
@@ -96,7 +96,7 @@ public function login(Request $request)
                         'birth_date' => $user->birth_date,
                         'nationality' => $user->tourist->nationality ?? null,
 
-                        'emergency_contact' => $user->tourist->emergency_contact ?? null,
+
                     ],
                     'access_token' => $token,
                     'token_type' => 'Bearer'
@@ -145,19 +145,35 @@ public function login(Request $request)
                 'cv_path' => 'required|file|mimes:pdf|max:5120', // ملف PDF بحد أقصى 5MB
             ]);
 
-            if ($request->hasFile('profile_image')) {
-                $profilePath = $request->file('profile_image')->store('public/profile_images');
-                $profilePicturePath = str_replace('public/', '', $profilePath);
-            } else {
-                $profilePicturePath = null;
-            }
-            // تخزين الصورة
-            $licensePath = $request->file('license_picture_path')->store('public/license_picture_path');
-            $relativeLicensePath = str_replace('public/', '', $licensePath);
+            // if ($request->hasFile('profile_image')) {
+            //     $profilePath = $request->file('profile_image')->store('public/profile_images');
+            //     $profilePicturePath = str_replace('public/', '', $profilePath);
+            // } else {
+            //     $profilePicturePath = null;
+            // }
+             $profilePicturePath = null;
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+            $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
+            $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
+        }
 
-            $cvPath = $request->file('cv_path')->store('public/cvs');
-            $relativeCvPath = str_replace('public/', '', $cvPath);
 
+        $relativeLicensePath = null;
+        if ($request->hasFile('license_picture_path')) {
+            $image = $request->file('license_picture_path');
+            $fileName = uniqid('licensePath_') . '.' . $image->getClientOriginalExtension();
+            $relativeLicensePath = $image->storeAs('licensePath', $fileName, 'public');
+        }
+
+          $relativeCvPath = null;
+        if ($request->hasFile('cv_path')) {
+            $image = $request->file('cv_path');
+            $fileName = uniqid('cv_path') . '.' . $image->getClientOriginalExtension();
+            $relativeCvPath = $image->storeAs('cv', $fileName, 'public');
+        }
+
+       
             //add new user
             $user = User::create([
                 'user_name' => $validatedData['user_name'],
@@ -191,6 +207,15 @@ public function login(Request $request)
                     'balance' => 0,
                 ]
             );
+ $imageUrl = $profilePicturePath
+            ? asset('storage/' . $profilePicturePath)
+            : null;
+ $LicensePatheUrl = $relativeLicensePath
+            ? asset('storage/' . $relativeLicensePath)
+            : null;
+            $relativeCvPathPatheUrl = $relativeCvPath
+            ? asset('storage/' . $relativeCvPath)
+            : null;
 
             return response()->json(
                 [
@@ -202,6 +227,9 @@ public function login(Request $request)
 
                     ],
                     [
+                         'profile_picture_url' => $imageUrl,
+                         'LicensePatheUrl' =>  $LicensePatheUrl,
+                          'relativeCvPathPatheUrl' =>  $relativeCvPathPatheUrl,
                         'access_token' => $token,
                         'token_type' => 'Bearer'
                     ]
