@@ -276,39 +276,39 @@ $guideId=$guide->id;
     *---------------------------------------------------------*/
     return response()->json($trips, 200);
 }
-public function store(Request $request)
-{
-    $request->validate([
-        'startDate' => 'required|date',
-        'daysOfCount' => 'required|integer|min:1',
-        'desribeForEachDay' => 'required|array',
-        'desribeForEachDay.*' => 'required|string',
-        'languageOfTrip' => 'required|string'
-    ]);
+    public function createPrivateTrip2(Request $request)
+    {
+        $request->validate([
+            'startDate' => 'required|date',
+            'daysOfCount' => 'required|integer|min:1',
+            'desribeForEachDay' => 'required|array',
+            'desribeForEachDay.*' => 'required|string',
+            'languageOfTrip' => 'required|string'
+        ]);
 
-    $startDate = Carbon::parse($request->startDate);
-    $endDate = $startDate->copy()->addDays($request->daysOfCount);
+        $startDate = Carbon::parse($request->startDate);
+        $endDate = $startDate->copy()->addDays($request->daysOfCount);
 
-    $trip = Trip::create([
-        'user_id' => Auth::user()->id,
-        'guide_id' => null,
-        'title' => null,
-        'description' => json_encode($request->desribeForEachDay),
-        'start_date' => $startDate,
-        'end_date' => $endDate,
-        'languageOfTrip' => $request->languageOfTrip,
-        'days_count' => $request->daysOfCount,
-        'price' => null,
-        'status' => 'تم حجز رحلة خاصة وينتظر رد المشرف السياحي',
-        'public_or_private' => 'private',
-        'delete_able' => true,
-    ]);
+        $trip = Trip::create([
+            'user_id' => Auth::user()->id,
+            'guide_id' => null,
+            'title' => null,
+            'description' => json_encode($request->desribeForEachDay),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'languageOfTrip' => $request->languageOfTrip,
+            'days_count' => $request->daysOfCount,
+            'price' => null,
+            'status' => 'تم حجز رحلة خاصة وينتظر رد المشرف السياحي',
+            'public_or_private' => 'private',
+            'delete_able' => true,
+        ]);
 
-    return response()->json([
-        'message' => 'تم إنشاء الرحلة بنجاح',
-        'trip' => $trip
-    ], 201);
-}
+        return response()->json([
+            'message' => 'تم إنشاء الرحلة بنجاح',
+            'trip' => $trip
+        ], 201);
+    }
 public function confirmByGuide(Request $request)
 {
     $request->validate([

@@ -123,6 +123,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });
-Route::middleware('auth:sanctum')->post('/trips', [TripController::class, 'store']);
-
+// في ملف routes/api.php
+Route::middleware('auth:sanctum')->post('/trips/create-private', [TripController::class, 'createPrivateTrip2']);
 Route::middleware('auth:sanctum')->post('/trips/confirm-by-guide', [TripController::class, 'confirmByGuide']);
