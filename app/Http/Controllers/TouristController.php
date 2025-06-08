@@ -263,7 +263,12 @@ public function updateProfile(Request $request)
         'gender' => $textData['gender'] ?? null,
         'birth_date' => $textData['birth_date'] ?? null,
     ]);
-
+ $profilePicturePath = null;
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+            $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
+            $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
+        }
     $touristData = array_filter([
         'nationality' => $textData['nationality'] ?? null,
     ]);
@@ -286,10 +291,13 @@ public function updateProfile(Request $request)
         $user->tourist->update($touristData);
         $updatedFields['tourist'] = true;
     }
-
+ $imageUrl = $profilePicturePath
+            ? asset('storage/' . $profilePicturePath)
+            : null;
     return response()->json([
         'message' => 'Profile updated successfully.',
         'user' => $user->fresh(),
+         'profile_picture_url' => $imageUrl,
         'tourist_data' => $user->tourist ? $user->tourist->fresh() : null,
         'password' => $passwordUpdated ? 'Password updated successfully.' : null
     ]);

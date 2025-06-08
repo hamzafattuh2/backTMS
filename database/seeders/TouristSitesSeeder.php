@@ -34,7 +34,7 @@ It stands as a symbol of Damascus’s spiritual and architectural heritage.',
         ]);
 
         TouristSite::create([
-            'name' => 'Tishreen_Park',
+            'name' => 'Tishreen Park',
             'main_image' => 'Tishreen_Park.jpg',
             'gallery_images' => ['tishreen1.jpg', 'tishreen2.jpg', 'tishreen3.jpg', 'tishreen4.jpg', 'tishreen5.jpg'],
             'address' => 'Damascus, Syria',
@@ -182,7 +182,7 @@ Krak des Chevaliers is one of the most iconic and well-preserved medieval castle
         ]);
         //دير مار موسى
         TouristSite::create([
-            'name' => 'Mar Musa Monastery',
+            'name' => 'Mar Musa',
             'main_image' => 'mar_musa.jpg',
             'gallery_images' => ['mar1.jpg', 'mar2.jpg', 'mar3.jpg', 'mar4.jpg', 'mar5.jpg'],
             'address' => 'Al-Nabk,syria',
