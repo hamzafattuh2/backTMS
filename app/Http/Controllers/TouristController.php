@@ -239,18 +239,12 @@ public function updateProfile(Request $request)
         $passwordUpdated = true;
     }
 
-    // معالجة الصورة
-    if ($request->hasFile('profile_image')) {
-        // حذف الصورة القديمة إذا كانت موجودة
-        if ($user->profile_image) {
-            Storage::delete('public/profile_images/' . basename($user->profile_image));
+    $profilePicturePath = null;
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+            $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
+            $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
         }
-
-        // حفظ الصورة الجديدة
-        $path = $request->file('profile_image')->store('public/profile_images');
-        $user->profile_image = str_replace('public/', '', $path);
-        $imageUrl = asset('storage/' . $user->profile_image);
-    }
 
     // تحديث البيانات الأساسية
     $user->fill($request->only([
@@ -269,6 +263,9 @@ public function updateProfile(Request $request)
         $user->tourist->save();
         $touristUpdated = true;
     }
+ $imageUrl = $profilePicturePath
+            ? asset('storage/' . $profilePicturePath)
+            : null;
 
     // حفظ التحديثات
     $user->save();
@@ -318,7 +315,7 @@ public function updateProfile(Request $request)
 //             'profile_image' => 'image|mimes:jpeg,png|max:2048'
 //         ]);
 
-//         $path = $request->file('profile_image')->store('public/profile_images');
+//         $path = $request->file('profile_image')->store('public/img_prof');
 //         $textData['profile_image'] = str_replace('public/', '', $path);
 
 //         if ($user->profile_image) {
