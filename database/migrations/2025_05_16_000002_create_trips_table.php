@@ -8,7 +8,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('trips', function (Blueprint $table) {
-           
+
              $table->id();
     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
     $table->foreignId('guide_id')->nullable()->constrained('tour_guides')->onDelete('set null');
@@ -32,8 +32,14 @@ return new class extends Migration
     $table->timestamps(); // ينصح بوجود timestamps للتتبع
         });
     }
-    public function down(): void
-    {
-        Schema::dropIfExists('trips');
-    }
+ public function down()
+{
+    Schema::table('trips', function (Blueprint $table) {
+        // إسقاط أي قيود أجنبية مرتبطة بجدول trips
+        $table->dropForeign(['user_id']);
+        $table->dropForeign(['guide_id']);
+    });
+
+    Schema::dropIfExists('trips');
+}
 };

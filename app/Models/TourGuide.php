@@ -35,5 +35,9 @@ class TourGuide extends Model
     }
 
     public function user() { return $this->belongsTo(User::class); }
+    public function tripRequests()
+{
+    return $this->hasMany(PrivateTripRequest::class);
+}
     public function guidedTrips() { return $this->hasMany(Trip::class, 'guide_id'); }
 }

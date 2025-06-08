@@ -36,7 +36,10 @@ public function priceSuggestions()
 {
     return $this->hasMany(\App\Models\TripPriceSuggestion::class);
 }
-
+public function privateRequests()
+{
+    return $this->hasMany(PrivateTripRequest::class);
+}
     public function owner() { return $this->belongsTo(User::class, 'user_id'); }
     public function guide() { return $this->belongsTo(User::class, 'guide_id'); }
     public function tripDays() { return $this->hasMany(TripDay::class); }

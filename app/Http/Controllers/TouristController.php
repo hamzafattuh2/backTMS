@@ -217,8 +217,8 @@ public function updateProfile(Request $request)
     $user = $request->user();
 
     // تحقق من البيانات النصية
-    $textData = $request->validate([
-        'new_password' => 'sometimes|string|min:8',
+    $validatedData = $request->validate([
+        'new_password' => 'nullable|sometimes|string|min:8',
         'new_password_confirmation' => 'required_with:new_password|same:new_password',
         'user_name' => 'sometimes|string|max:50|unique:users,user_name,' . $user->id,
         'first_name' => 'sometimes|string|max:50',
@@ -227,81 +227,154 @@ public function updateProfile(Request $request)
         'gender' => 'sometimes|in:male,female',
         'birth_date' => 'sometimes|date',
         'nationality' => 'sometimes|string|max:100',
+        'profile_image' => 'sometimes|image|mimes:jpeg,png|max:2048'
     ]);
 
-    $updatedFields = [];
+    $passwordUpdated = false;
+    $imageUrl = null;
 
     // معالجة كلمة السر
-    $passwordUpdated = false;
     if ($request->has('new_password')) {
-        $textData['password'] = Hash::make($textData['new_password']);
-        unset($textData['new_password']);
+        $user->password = Hash::make($validatedData['new_password']);
         $passwordUpdated = true;
     }
 
-    // معالجة الصورة بشكل منفصل
+    // معالجة الصورة
     if ($request->hasFile('profile_image')) {
-        $request->validate([
-            'profile_image' => 'image|mimes:jpeg,png|max:2048'
-        ]);
-
-        $path = $request->file('profile_image')->store('public/profile_images');
-        $textData['profile_image'] = str_replace('public/', '', $path);
-
+        // حذف الصورة القديمة إذا كانت موجودة
         if ($user->profile_image) {
-            Storage::delete('public/' . $user->profile_image);
+            Storage::delete('public/profile_images/' . basename($user->profile_image));
         }
+
+        // حفظ الصورة الجديدة
+        $path = $request->file('profile_image')->store('public/profile_images');
+        $user->profile_image = str_replace('public/', '', $path);
+        $imageUrl = asset('storage/' . $user->profile_image);
     }
 
-    // تجهيز بيانات التحديث
-    $userData = array_filter([
-        'first_name' => $textData['first_name'] ?? null,
-        'last_name' => $textData['last_name'] ?? null,
-        'password' => $textData['password'] ?? null,
-        'phone_number' => $textData['phone_number'] ?? null,
-        'profile_image' => $textData['profile_image'] ?? null,
-        'gender' => $textData['gender'] ?? null,
-        'birth_date' => $textData['birth_date'] ?? null,
-    ]);
- $profilePicturePath = null;
-        if ($request->hasFile('profile_image')) {
-            $image = $request->file('profile_image');
-            $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
-            $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
-        }
-    $touristData = array_filter([
-        'nationality' => $textData['nationality'] ?? null,
-    ]);
+    // تحديث البيانات الأساسية
+    $user->fill($request->only([
+        'user_name',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'gender',
+        'birth_date'
+    ]));
 
-    // تحقق إذا لا يوجد أي شيء لتحديثه
-    if (empty($userData) && empty($touristData)) {
-        return response()->json([
-            'message' => 'Nothing to update.'
-        ], 200);
+    // تحديث بيانات السائح إذا كانت موجودة
+    $touristUpdated = false;
+    if ($user->tourist && $request->has('nationality')) {
+        $user->tourist->nationality = $validatedData['nationality'];
+        $user->tourist->save();
+        $touristUpdated = true;
     }
 
-    // تحديث بيانات المستخدم
-    if (!empty($userData)) {
-        $user->update($userData);
-        $updatedFields['user'] = true;
-    }
+    // حفظ التحديثات
+    $user->save();
 
-    // تحديث بيانات السائح
-    if ($user->tourist && !empty($touristData)) {
-        $user->tourist->update($touristData);
-        $updatedFields['tourist'] = true;
-    }
- $imageUrl = $profilePicturePath
-            ? asset('storage/' . $profilePicturePath)
-            : null;
     return response()->json([
         'message' => 'Profile updated successfully.',
-        'user' => $user->fresh(),
-         'profile_picture_url' => $imageUrl,
-        'tourist_data' => $user->tourist ? $user->tourist->fresh() : null,
-        'password' => $passwordUpdated ? 'Password updated successfully.' : null
+        'data' => [
+            'user' => $user->fresh(),
+            'tourist' => $user->tourist ? $user->tourist->fresh() : null,
+            'profile_picture_url' => $imageUrl ?: $user->profile_image_url,
+        ],
+        'password_updated' => $passwordUpdated,
+        'tourist_updated' => $touristUpdated
     ]);
 }
+
+// public function updateProfile(Request $request)
+// {
+//     $user = $request->user();
+
+//     // تحقق من البيانات النصية
+//     $textData = $request->validate([
+//         'new_password' => 'nullable|sometimes|string|min:8',
+//         'new_password_confirmation' => 'required_with:new_password|same:new_password',
+//         'user_name' => 'sometimes|string|max:50|unique:users,user_name,' . $user->id,
+//         'first_name' => 'sometimes|string|max:50',
+//         'last_name' => 'sometimes|string|max:50',
+//         'phone_number' => 'sometimes|string|max:20',
+//         'gender' => 'sometimes|in:male,female',
+//         'birth_date' => 'sometimes|date',
+//         'nationality' => 'sometimes|string|max:100',
+//     ]);
+
+//     $updatedFields = [];
+
+//     // معالجة كلمة السر
+//     $passwordUpdated = false;
+//     if ($request->has('new_password')) {
+//         $textData['password'] = Hash::make($textData['new_password']);
+//         unset($textData['new_password']);
+//         $passwordUpdated = true;
+//     }
+
+//     // معالجة الصورة بشكل منفصل
+//     if ($request->hasFile('profile_image')) {
+//         $request->validate([
+//             'profile_image' => 'image|mimes:jpeg,png|max:2048'
+//         ]);
+
+//         $path = $request->file('profile_image')->store('public/profile_images');
+//         $textData['profile_image'] = str_replace('public/', '', $path);
+
+//         if ($user->profile_image) {
+//             Storage::delete('public/' . $user->profile_image);
+//         }
+//     }
+
+//     // تجهيز بيانات التحديث
+//     $userData = array_filter([
+//         'first_name' => $textData['first_name'] ?? null,
+//         'last_name' => $textData['last_name'] ?? null,
+//         'password' => $textData['password'] ?? null,
+//         'phone_number' => $textData['phone_number'] ?? null,
+//         'profile_image' => $textData['profile_image'] ?? null,
+//         'gender' => $textData['gender'] ?? null,
+//         'birth_date' => $textData['birth_date'] ?? null,
+//     ]);
+//  $profilePicturePath = null;
+//         if ($request->hasFile('profile_image')) {
+//             $image = $request->file('profile_image');
+//             $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
+//             $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
+//         }
+//     $touristData = array_filter([
+//         'nationality' => $textData['nationality'] ?? null,
+//     ]);
+
+//     // تحقق إذا لا يوجد أي شيء لتحديثه
+//     if (empty($userData) && empty($touristData)) {
+//         return response()->json([
+//             'message' => 'Nothing to update.'
+//         ], 200);
+//     }
+
+//     // تحديث بيانات المستخدم
+//     if (!empty($userData)) {
+//         $user->update($userData);
+//         $updatedFields['user'] = true;
+//     }
+
+//     // تحديث بيانات السائح
+//     if ($user->tourist && !empty($touristData)) {
+//         $user->tourist->update($touristData);
+//         $updatedFields['tourist'] = true;
+//     }
+//  $imageUrl = $profilePicturePath
+//             ? asset('storage/' . $profilePicturePath)
+//             : null;
+//     return response()->json([
+//         'message' => 'Profile updated successfully.',
+//         'user' => $user->fresh(),
+//          'profile_picture_url' => $imageUrl,
+//         'tourist_data' => $user->tourist ? $user->tourist->fresh() : null,
+//         'password' => $passwordUpdated ? 'Password updated successfully.' : null
+//     ]);
+// }
 
 public function getProfile(Request $request)
 {

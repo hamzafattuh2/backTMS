@@ -2,12 +2,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\TripResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Trip;
+use Illuminate\Validation\Rule;
 use App\Models\TripDay;
+use App\Models\TourGuide;
+use App\Models\PrivateTripRequest;
 use App\Models\TripActivity;
 use App\Models\TripPriceSuggestion;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use App\Notifications\PriceSuggested;   // أعلى الملف
 class TripController extends Controller
@@ -276,39 +281,121 @@ $guideId=$guide->id;
     *---------------------------------------------------------*/
     return response()->json($trips, 200);
 }
-    public function createPrivateTrip2(Request $request)
-    {
-        $request->validate([
-            'startDate' => 'required|date',
-            'daysOfCount' => 'required|integer|min:1',
-            'desribeForEachDay' => 'required|array',
-            'desribeForEachDay.*' => 'required|string',
-            'languageOfTrip' => 'required|string'
+    // public function createPrivateTrip2(Request $request)
+    // {
+    //     $request->validate([
+    //         'startDate' => 'required|date',
+    //         'daysOfCount' => 'required|integer|min:1',
+    //         'desribeForEachDay' => 'required|array',
+    //         'desribeForEachDay.*' => 'required|string',
+    //         'languageOfTrip' => 'required|string'
+    //     ]);
+
+    //     $startDate = Carbon::parse($request->startDate);
+    //     $endDate = $startDate->copy()->addDays($request->daysOfCount);
+
+    //     $trip = Trip::create([
+    //         'user_id' => Auth::user()->id,
+    //         'guide_id' => null,
+    //         'title' => null,
+    //         'description' => json_encode($request->desribeForEachDay),
+    //         'start_date' => $startDate,
+    //         'end_date' => $endDate,
+    //         'languageOfTrip' => $request->languageOfTrip,
+    //         'days_count' => $request->daysOfCount,
+    //         'price' => null,
+    //         'status' => 'تم حجز رحلة خاصة وينتظر رد المشرف السياحي',
+    //         'public_or_private' => 'private',
+    //         'delete_able' => true,
+    //     ]);
+
+    //     return response()->json([
+    //         'message' => 'تم إنشاء الرحلة بنجاح',
+    //         'trip' => $trip
+    //     ], 201);
+    // }
+   public function createPrivateTrip2(Request $request)
+{
+    $validated = $request->validate([
+        'startDate' => 'required|date|after_or_equal:today',
+        'daysOfCount' => 'required|integer|min:1|max:30',
+        'desribeForEachDay' => 'required|array|size:'.$request->daysOfCount,
+        'desribeForEachDay.*' => 'required|string|max:500',
+            // 'languageOfTrip' => [
+            //     'required',
+            //     'string',
+            //     Rule::exists('tour_guides', 'languages')->where(function ($query) {
+            //         return $query->where('confirmByAdmin', true);
+            //     })
+            // ]
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // إنشاء الرحلة الأساسية
+        $trip = Trip::create([
+            'user_id' => Auth::id(),
+            'start_date' => Carbon::parse($validated['startDate']),
+            'end_date' => Carbon::parse($validated['startDate'])->addDays($validated['daysOfCount']),
+            'description' => json_encode($validated['desribeForEachDay']),
+            // 'languageOfTrip' => $validated['languageOfTrip'],
+            'days_count' => $validated['daysOfCount'],
+            'status' => 'pending_guide_approval',
+            'public_or_private' => 'private',
         ]);
 
-        $startDate = Carbon::parse($request->startDate);
-        $endDate = $startDate->copy()->addDays($request->daysOfCount);
+        // البحث عن المرشدين المتاحين
+        $matchingGuides = TourGuide::where('languages', 'like', '%'.$validated['languageOfTrip'].'%')
+            ->where('confirmByAdmin', true)
+            ->active() // افترض أن لديك scope لعرض المرشدين النشطين فقط
+            ->get(['id', 'user_id', 'languages']);
 
-        $trip = Trip::create([
-            'user_id' => Auth::user()->id,
-            'guide_id' => null,
-            'title' => null,
-            'description' => json_encode($request->desribeForEachDay),
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'languageOfTrip' => $request->languageOfTrip,
-            'days_count' => $request->daysOfCount,
-            'price' => null,
-            'status' => 'تم حجز رحلة خاصة وينتظر رد المشرف السياحي',
-            'public_or_private' => 'private',
-            'delete_able' => true,
+        if ($matchingGuides->isEmpty()) {
+            throw new \Exception('لا يوجد مرشدين متاحين بهذه اللغة');
+        }
+
+        // إنشاء طلبات الرحلات
+        $requests = $matchingGuides->map(function ($guide) use ($trip, $validated) {
+            return [
+                'trip_id' => $trip->id,
+                'tourist_id' => Auth::id(),
+                'guide_id' => 7,
+                // 'title_request' => "طلب رحلة بلغة: {$validated['languageOfTrip']}",
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        });
+
+        // إدراج جماعي لأفضل أداء
+        PrivateTripRequest::insert($requests->toArray());
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إنشاء الرحلة وإرسال الطلبات',
+            'data' => [
+                'trip' => new TripResource($trip),
+                'sent_requests_count' => $matchingGuides->count()
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        \Log::error('فشل إنشاء رحلة خاصة', [
+            'user' => Auth::id(),
+            'error' => $e->getMessage(),
+            'request' => $request->all()
         ]);
 
         return response()->json([
-            'message' => 'تم إنشاء الرحلة بنجاح',
-            'trip' => $trip
-        ], 201);
+            'success' => false,
+            'message' => 'فشل في إنشاء الرحلة: ' . $e->getMessage()
+        ], 500);
     }
+}
 public function confirmByGuide(Request $request)
 {
     $request->validate([

@@ -12,6 +12,7 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripPriceSuggestionController;
 use App\Http\Controllers\TouristSiteController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\HotelController;
 
 
 
@@ -123,6 +124,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });
+
 // في ملف routes/api.php
 Route::middleware('auth:sanctum')->post('/trips/create-private', [TripController::class, 'createPrivateTrip2']);
 Route::middleware('auth:sanctum')->post('/trips/confirm-by-guide', [TripController::class, 'confirmByGuide']);
+
+// Hotel APIs
+Route::prefix('hotels')->group(function () {
+    Route::get('/', [HotelController::class, 'index']);
+    Route::get('/filter', [HotelController::class, 'filterByCity']);
+    Route::get('/{id}', [HotelController::class, 'show']);
+    Route::middleware('auth:sanctum')->post('/{id}/book', [HotelController::class, 'book']);
+});
