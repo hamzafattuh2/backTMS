@@ -9,116 +9,11 @@ use Illuminate\Support\Facades\Hash; // أضف هذا السطر
 use Illuminate\Http\Request;
 use App\Notifications\TwoFactorCode;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class TouristController extends Controller
 {
-    // public function registerTourist(Request $request)
-    // {
-    //     try {
-    //         // التحقق من البيانات بما فيها الصورة
-    //         $validatedData = $request->validate([
 
-    //             //user
-    //             'user_name' => 'required|string|max:50|unique:users,user_name',
-    //             'last_name' => 'required|string|max:50',
-    //             'first_name' => 'required|string|max:50',
-    //             'email' => 'required|string|email|max:255|unique:users,email',
-    //             'password' => 'required|string|min:8|confirmed',
-    //             'phone_number' => 'required|string|max:20',
-    //             'profile_image' => 'nullable|image|mimes:jpeg,png|max:2048',
-    //             'type' => 'nullable|string',
-    //             'gender' => 'required|in:male,female',
-    //             'birth_date' => 'required|date',//2
-
-
-
-    //             //tourist
-    //             'nationality' => 'required|string|max:100',//1
-
-
-
-    //         ]);
-
-
-    //         // بدء المعاملة لضمان سلامة البيانات
-    //         DB::beginTransaction();
-
-    //         // تخزين صورة الملف الشخصي إذا وجدت
-    //         $profilePicturePath = null;
-    //     if ($request->hasFile('profile_image')) {
-    //         $path = $request->file('profile_image')->store(
-    //             'public/img_prof', // المسار الجديد
-    //             'public' // استخدام نظام الملفات public
-    //         );
-    //         $profilePicturePath = str_replace('public/', '', $path);
-    //     }
-
-    //         // إنشاء المستخدم في جدول users
-    //         $user = User::create([
-    //             'user_name' => $validatedData['user_name'],
-    //             'first_name' => $validatedData['first_name'],
-    //             'last_name' => $validatedData['last_name'],
-    //             'email' => $validatedData['email'],
-    //             'password' => Hash::make($validatedData['password']),
-    //             'type' => 'tourist',
-    //             'phone_number' => $validatedData['phone_number'],
-    //             'profile_image' => $profilePicturePath ?? null,
-    //             'gender' => $validatedData['gender'],
-    //             'birth_date' => $validatedData['birth_date'] ?? null,
-
-    //         ]);
-
-    //         $token = $user->createToken('tourist_auth_token')->plainTextToken;
-    //         $user->generateCode();
-
-    //         // $user->notify(new TwoFactorCode());
-    //         // إنشاء السائح في جدول tourists
-    //         $tourist = Tourist::create([
-    //             'user_id' => $user->id,
-    //             'nationality' => $validatedData['nationality'],
-
-    //         ]);
-    //         $wallet = Wallet::create(
-    //             [
-    //                 'user_id' => $user->id,
-    //                 'balance' => 0,
-    //             ]
-    //         );
-    //         // إتمام المعاملة
-    //         DB::commit();
-
-    //         return response()->json(
-    //             [
-    //                 [
-    //                     'message' => 'Tourist registered successfully',
-    //                     'user' => $user,
-    //                     'tourist' => $tourist,
-    //                    'profile_picture_url' => $profilePicturePath
-    //                 ? asset("storage/img_prof/" . basename($profilePicturePath))
-    //                 : null    ],
-    //                 [
-    //                     'access_token' => $token,
-    //                     'token_type' => 'Bearer'
-    //                 ]
-    //             ],
-    //             201
-    //         );
-
-    //     } catch (\Illuminate\Validation\ValidationException $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'message' => 'Validation failed',
-    //             'errors' => $e->errors()
-    //         ], 422);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'message' => 'Registration failed',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-    //for delete
 
 public function registerTourist(Request $request)
 {
@@ -281,98 +176,94 @@ public function updateProfile(Request $request)
         'tourist_updated' => $touristUpdated
     ]);
 }
+//   public function getProfileImage()
+//     {
+//         $user = Auth::user();
 
-// public function updateProfile(Request $request)
-// {
-//     $user = $request->user();
-
-//     // تحقق من البيانات النصية
-//     $textData = $request->validate([
-//         'new_password' => 'nullable|sometimes|string|min:8',
-//         'new_password_confirmation' => 'required_with:new_password|same:new_password',
-//         'user_name' => 'sometimes|string|max:50|unique:users,user_name,' . $user->id,
-//         'first_name' => 'sometimes|string|max:50',
-//         'last_name' => 'sometimes|string|max:50',
-//         'phone_number' => 'sometimes|string|max:20',
-//         'gender' => 'sometimes|in:male,female',
-//         'birth_date' => 'sometimes|date',
-//         'nationality' => 'sometimes|string|max:100',
-//     ]);
-
-//     $updatedFields = [];
-
-//     // معالجة كلمة السر
-//     $passwordUpdated = false;
-//     if ($request->has('new_password')) {
-//         $textData['password'] = Hash::make($textData['new_password']);
-//         unset($textData['new_password']);
-//         $passwordUpdated = true;
-//     }
-
-//     // معالجة الصورة بشكل منفصل
-//     if ($request->hasFile('profile_image')) {
-//         $request->validate([
-//             'profile_image' => 'image|mimes:jpeg,png|max:2048'
-//         ]);
-
-//         $path = $request->file('profile_image')->store('public/img_prof');
-//         $textData['profile_image'] = str_replace('public/', '', $path);
-
-//         if ($user->profile_image) {
-//             Storage::delete('public/' . $user->profile_image);
+//         if (!$user || !$user->profile_image) {
+//             return response()->json([
+//                 'message' => 'الصورة غير متوفرة',
+//                 'profile_image' => $user->profile_image,
+//             ], 404);
 //         }
-//     }
 
-//     // تجهيز بيانات التحديث
-//     $userData = array_filter([
-//         'first_name' => $textData['first_name'] ?? null,
-//         'last_name' => $textData['last_name'] ?? null,
-//         'password' => $textData['password'] ?? null,
-//         'phone_number' => $textData['phone_number'] ?? null,
-//         'profile_image' => $textData['profile_image'] ?? null,
-//         'gender' => $textData['gender'] ?? null,
-//         'birth_date' => $textData['birth_date'] ?? null,
-//     ]);
-//  $profilePicturePath = null;
-//         if ($request->hasFile('profile_image')) {
-//             $image = $request->file('profile_image');
-//             $fileName = uniqid('profile_') . '.' . $image->getClientOriginalExtension();
-//             $profilePicturePath = $image->storeAs('img_prof', $fileName, 'public');
+//         $imagePath = '/img_prof/' . $user->profile_image;
+
+//         if (!Storage::exists($imagePath)) {
+//             return response()->json([
+//                 'message' => 'الصورة غير موجودة',
+//                 // 'profile_image_url' => null
+//                                'profile_image' => $user->profile_image,
+//             ], 404);
 //         }
-//     $touristData = array_filter([
-//         'nationality' => $textData['nationality'] ?? null,
-//     ]);
 
-//     // تحقق إذا لا يوجد أي شيء لتحديثه
-//     if (empty($userData) && empty($touristData)) {
 //         return response()->json([
-//             'message' => 'Nothing to update.'
-//         ], 200);
+//             'message' => 'تم جلب الصورة بنجاح',
+//             'profile_image_url' => asset(Storage::url($imagePath))
+//         ]);
 //     }
 
-//     // تحديث بيانات المستخدم
-//     if (!empty($userData)) {
-//         $user->update($userData);
-//         $updatedFields['user'] = true;
-//     }
+    /**
+     * تحديث الصورة الشخصية للسائح الحالي
+     */
+    public function getProfileImage()
+{
+    $user = Auth::user();
 
-//     // تحديث بيانات السائح
-//     if ($user->tourist && !empty($touristData)) {
-//         $user->tourist->update($touristData);
-//         $updatedFields['tourist'] = true;
-//     }
-//  $imageUrl = $profilePicturePath
-//             ? asset('storage/' . $profilePicturePath)
-//             : null;
-//     return response()->json([
-//         'message' => 'Profile updated successfully.',
-//         'user' => $user->fresh(),
-//          'profile_picture_url' => $imageUrl,
-//         'tourist_data' => $user->tourist ? $user->tourist->fresh() : null,
-//         'password' => $passwordUpdated ? 'Password updated successfully.' : null
-//     ]);
-// }
+    if (!$user || !$user->profile_image) {
+        return response()->json([
+            'message' => 'الصورة غير متوفرة',
+            'profile_image' => null,
+        ], 404);
+    }
 
+    // الصورة محفوظة في img_prof داخل الـ disk العام
+    $imagePath = $user->profile_image;
+
+    // تأكد من المسار داخل disk 'public'
+    if (!Storage::disk('public')->exists($imagePath)) {
+        return response()->json([
+            'message' => 'الصورة غير موجودة',
+            'profile_image' => $imagePath,
+        ], 404);
+    }
+
+    return response()->json([
+        'message' => 'تم جلب الصورة بنجاح',
+        'profile_image_url' => asset('storage/' . $imagePath),
+        'user'=> $user,
+        'tourist'=>$user->tourist,  
+    ]);
+}
+
+    public function updateProfileImage(Request $request)
+    {
+        $request->validate([
+            'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $user = Auth::user();
+
+        // حذف الصورة القديمة إذا كانت موجودة
+        if ($user->profile_image) {
+            $oldImagePath = 'public/img_prof/' . $user->profile_image;
+            Storage::delete($oldImagePath);
+        }
+
+        // حفظ الصورة الجديدة
+        $image = $request->file('profile_image');
+        $imageName = time() . '_' . $image->getClientOriginalName();
+        $imagePath = $image->storeAs('public/img_prof', $imageName);
+
+        // تحديث قاعدة البيانات
+        $user->profile_image = $imageName;
+        $user->save();
+
+        return response()->json([
+            'message' => 'تم تحديث الصورة بنجاح',
+            'profile_image_url' => asset(Storage::url($imagePath))
+        ]);
+    }
 public function getProfile(Request $request)
 {
     $user = $request->user();

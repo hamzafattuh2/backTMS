@@ -136,3 +136,6 @@ Route::prefix('hotels')->group(function () {
     Route::get('/{id}', [HotelController::class, 'show']);
     Route::middleware('auth:sanctum')->post('/{id}/book', [HotelController::class, 'book']);
 });
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/profile/image', [TouristController::class, 'getProfileImage']);
+});
