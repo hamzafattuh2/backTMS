@@ -137,3 +137,8 @@ Route::prefix('hotels')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/image', [TouristController::class, 'getProfileImage']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+Route::post('/tourist-sites/search', [TouristSiteController::class, 'search']);
+
+});

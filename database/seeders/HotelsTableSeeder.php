@@ -21,7 +21,7 @@ class HotelsTableSeeder extends Seeder
                 'number_of_reviews' => $faker->numberBetween(0, 500),
                 'price_per_night' => $faker->randomFloat(2, 50, 500),
                 'images' => json_encode([
-         
+
                             'main_image' => 'images/1.png',
                     'sub_image1' => 'images/2.png',
                     'sub_image2' => 'images/3.png',

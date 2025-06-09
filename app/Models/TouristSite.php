@@ -27,6 +27,7 @@ class TouristSite extends Model
         'gallery_images' => 'array'
     ];
 
+
     /**
      * علاقة مع التقييمات (إذا كان لديك نموذج Rating)
      */
@@ -51,4 +52,5 @@ class TouristSite extends Model
         $this->average_rating = $this->ratings()->avg('rating');
         $this->save();
     }
+
 }

@@ -5,6 +5,7 @@ use App\Http\Resources\TouristSiteResource;
 use App\Models\TouristSite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
 
 class TouristSiteController extends Controller
 {
@@ -64,5 +65,201 @@ public function getSiteDetails($id)
             'data' => new TouristSiteResource($site)
         ]);
     // });
+}
+
+
+//  public function search(Request $request)
+//     {
+//         // التحقق من صحة المدخلات
+//         $validator = Validator::make($request->all(), [
+//             'query' => 'required|string|min:2',
+//             'category' => 'nullable|in:popular,nature,outdoors,historic,landmarks',
+//             'min_rating' => 'nullable|numeric|min:0|max:5',
+//             'limit' => 'nullable|integer|min:1|max:100',
+//         ]);
+
+//         if ($validator->fails()) {
+//             return response()->json([
+//                 'success' => false,
+//                 'errors' => $validator->errors()
+//             ], 422);
+//         }
+
+//         // البدء ببناء الاستعلام
+//         $query = TouristSite::query();
+
+//         // البحث عن الاسم (حساس وغير حساس للحالة)
+//         $searchTerm = $request->input('query');
+//         $query->where(function($q) use ($searchTerm) {
+//             $q->where('name', 'LIKE', "%{$searchTerm}%")
+//               ->orWhere('name', 'LIKE', "%".ucfirst($searchTerm)."%")
+//               ->orWhere('name', 'LIKE', "%".strtolower($searchTerm)."%")
+//               ->orWhere('name', 'LIKE', "%".strtoupper($searchTerm)."%");
+//         });
+
+//         // تصفية حسب التصنيف إذا موجود
+//         if ($request->has('category')) {
+//             $query->where('category', $request->category);
+//         }
+
+//         // تصفية حسب الحد الأدنى للتقييم إذا موجود
+//         if ($request->has('min_rating')) {
+//             $query->where('average_rating', '>=', $request->min_rating);
+//         }
+
+//         // تحديد عدد النتائج (القيمة الافتراضية 10)
+//         $limit = $request->input('limit', 10);
+//         $results = $query->limit($limit)->get();
+
+//         // تحسين شكل النتائج المرجعة
+//         $formattedResults = $results->map(function ($site) {
+//             return [
+//                 'id' => $site->id,
+//                 'name' => $site->name,
+//                 'main_image' => asset('storage/' . $site->main_image),
+//                 'gallery_images' => json_decode($site->gallery_images, true),
+//                 'address' => $site->address,
+//                 'category' => $site->category,
+//                 'average_rating' => $site->average_rating,
+//                 'views_count' => $site->views_count
+//             ];
+//         });
+
+//         return response()->json([
+//             'success' => true,
+//             'data' => $formattedResults,
+//             'meta' => [
+//                 'total_results' => $results->count(),
+//                 'search_term' => $searchTerm,
+//                 'filters_applied' => $request->only(['category', 'min_rating'])
+//             ]
+//         ]);
+//     }
+
+
+public function search(Request $request)
+{
+    // التحقق من صحة المدخلات
+    $validator = Validator::make($request->all(), [
+        'query' => 'sometimes|string|min:2',
+        'category' => 'nullable|in:popular,nature,outdoors,historic,landmarks',
+        'min_rating' => 'nullable|numeric|min:0|max:5',
+        'sort_order' => 'nullable|in:asc,desc'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation errors',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    // البدء ببناء الاستعلام
+    $query = TouristSite::query();
+
+    // البحث حسب الاسم فقط
+    if ($request->has('query') && !empty($request->query)) {
+        $searchTerm = $request->input('query');
+        $query->where('name', 'LIKE', "%{$searchTerm}%");
+    }
+
+    // التصفية حسب التصنيف
+    if ($request->has('category')) {
+        $query->where('category', $request->category);
+    }
+
+    // التصفية حسب الحد الأدنى للتقييم
+    if ($request->has('min_rating')) {
+        $query->where('average_rating', '>=', $request->min_rating);
+    }
+
+    // الترتيب دائمًا حسب عدد المشاهدات
+    $sortOrder = $request->input('sort_order', 'desc');
+    $query->orderBy('views_count', $sortOrder);
+
+    // جلب كل النتائج بدون حد
+    $results = $query->get();
+
+    // إذا لم توجد نتائج
+    if ($results->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'No tourist sites found matching your criteria',
+            'suggestions' => [
+                'Try a different search term',
+                'Remove some filters',
+                'Check the spelling'
+            ]
+        ], 404);
+    }
+
+    // تنسيق النتائج
+    $formattedResults = $results->map(function ($site) {
+        return [
+            'id' => $site->id,
+            'name' => $site->name,
+            'main_image' => $this->getImageUrl($site->main_image),
+            'gallery_images' => $this->getGalleryUrls($site->gallery_images),
+            'address' => $site->address,
+            'description' => $site->description,
+            'category' => $site->category,
+            'views_count' => $site->views_count,
+            'average_rating' => $site->average_rating,
+            'created_at' => $site->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $site->updated_at->format('Y-m-d H:i:s')
+        ];
+    });
+
+    \Log::debug('Search Query:', [
+        'SQL' => $query->toSql(),
+        'Bindings' => $query->getBindings(),
+        'Results' => $results->toArray()
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'data' => $formattedResults,
+        'meta' => [
+            'total_results' => $results->count(),
+            // 'filters_applied' => $request->only(['query', 'category', 'min_rating']),
+              'filters_applied' => $request->only('query'),
+            // 'sorting' => [
+            //     'by' => 'views_count',
+            //     'order' => $sortOrder
+            // ]
+        ]
+    ]);
+}
+
+
+    /**
+     * الحصول على رابط الصورة الرئيسية
+     */
+    private function getImageUrl($path)
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+
+        return asset('storage/' . $path);
+    }
+
+    /**
+     * الحصول على روابط معرض الصور
+     */
+  private function getGalleryUrls($gallery)
+{
+    if (empty($gallery) || !is_array($gallery)) {
+        return [];
+    }
+
+    return array_map(function($image) {
+        return $this->getImageUrl($image);
+    }, $gallery);
 }
 }
