@@ -9,29 +9,36 @@ use Illuminate\Support\Facades\Validator;
 class HotelController extends Controller
 {
     // API 1: Get all hotels with basic information
-    public function index()
-    {
-        $hotels = Hotel::select('id', 'name', 'city', 'rating', 'number_of_reviews', 'price_per_night')
-            ->where('is_active', true)
-            ->get()
-            ->map(function ($hotel) {
-                return [
-                    'id' => $hotel->id,
-                    'name' => $hotel->name,
-                    'location' => $hotel->city,
-                    'reviews' => [
-                        'rating' => $hotel->rating,
-                        'number_of_reviews' => $hotel->number_of_reviews
-                    ],
-                    'price_per_night' => $hotel->price_per_night
-                ];
-            });
+ 
+   public function index(){
+    $hotels = Hotel::select('id', 'name', 'city', 'rating', 'number_of_reviews', 'price_per_night', 'images')
+        ->where('is_active', true)
+        ->get()
+        ->map(function ($hotel) {
+            $mainImage = $hotel->images['main_image'] ?? null; // التأكد إذا كانت موجودة
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $hotels
-        ]);
-    }
+            return [
+                'id' => $hotel->id,
+                'name' => $hotel->name,
+                'location' => $hotel->city,
+                'reviews' => [
+                    'rating' => $hotel->rating,
+                    'number_of_reviews' => $hotel->number_of_reviews
+                ],
+                'price_per_night' => $hotel->price_per_night,
+                'main_image' => $mainImage,
+                'main_image_url' => $mainImage ? asset('storage/'.$mainImage) : null // بناء رابط محلي كامل للصورة
+            ];
+        });
+
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $hotels
+    ]);
+}
+
+
 
     // API 2: Filter hotels by city
     public function filterByCity(Request $request)
@@ -71,30 +78,40 @@ class HotelController extends Controller
     }
 
     // API 3: Get detailed hotel information
-    public function show($id)
-    {
-        $hotel = Hotel::findOrFail($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'name' => $hotel->name,
-                'stars' => $hotel->stars,
-                'price_per_night' => $hotel->price_per_night,
-                'description' => $hotel->description,
-                'images' => $hotel->images,
-                'rating' => $hotel->rating,
-                'number_of_reviews' => $hotel->number_of_reviews,
-                'amenities' => $hotel->amenities,
-                'contact_email' => $hotel->contact_email,
-                'contact_phone' => $hotel->contact_phone,
-                'guide_name' => $hotel->guide_name,
-                'available_seats' => $hotel->available_seats
-            ]
-        ]);
-    }
+    public function show($id)
+{
+    $hotel = Hotel::findOrFail($id);
+
+    $images = is_string($hotel->images) ? json_decode($hotel->images, true) : $hotel->images;
+
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            'name' => $hotel->name,
+            'location' => $hotel->address,
+            'stars' => $hotel->stars,
+            'price_per_night' => $hotel->price_per_night,
+            'description' => $hotel->description,
+            'images' => $hotel->images,
+            'sub_image1_url' => isset($images['sub_image1']) ? asset('storage/' . $images['sub_image1']) : null,
+            'sub_image2_url' => isset($images['sub_image2']) ? asset('storage/' . $images['sub_image2']) : null,
+            'sub_image3_url' => isset($images['sub_image3']) ? asset('storage/' . $images['sub_image3']) : null,
+            'sub_image4_url' => isset($images['sub_image4']) ? asset('storage/' . $images['sub_image4']) : null,
+            'rating' => $hotel->rating,
+            'number_of_reviews' => $hotel->number_of_reviews,
+            'amenities' => $hotel->amenities,
+            'contact_email' => $hotel->contact_email,
+            'contact_phone' => $hotel->contact_phone,
+            'guide_name' => $hotel->guide_name,
+            'available_seats' => $hotel->available_seats,
+        ]
+    ]);
+}
+
 
     // API 4: Book a hotel room
+
     public function book(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -113,12 +130,12 @@ class HotelController extends Controller
         $hotel = Hotel::findOrFail($id);
 
         // Check if hotel is active
-        if (!$hotel->is_active) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Hotel is not available for booking'
-            ], 400);
-        }
+        // if (!$hotel->is_active) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Hotel is not available for booking'
+        //     ], 400);
+        // }
 
         // Check if there are available seats
         if ($hotel->available_seats !== null && $hotel->available_seats < 1) {
@@ -155,7 +172,9 @@ class HotelController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'number_of_days' => $request->number_of_days,
-                'total_price' => $total_price
+                'price_per_night'=>$hotel->price_per_night,
+                'total_price' => $total_price,
+             'booking_date' => now()->toDateTimeString(), // صيغة: "YYYY-MM-DD HH:MM:SS"
             ]
         ]);
     }

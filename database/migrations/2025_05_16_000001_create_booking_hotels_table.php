@@ -12,7 +12,9 @@ return new class extends Migration
             $table->foreignId('hotel_id')->constrained('hotels')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed']);
-            $table->date('booking_date');
+            $table->date('start_date')->nullable();
+             $table->date('end_date')->nullable();
+            $table->date('booking_date')->nullable();
             $table->text('special_requests')->nullable();
             $table->enum('payment_status', ['pay', 'not pay']);
             $table->timestamps();
@@ -22,4 +24,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('booking_hotels');
     }
-}; 
+};

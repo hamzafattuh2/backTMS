@@ -78,9 +78,7 @@ Route::middleware(['auth:sanctum', 'is_tourist'])->group(function () {
 
 });//شغال مية مية بس لازم يكون الباسورد فيه سترينغ انا حطيته بس بدون ما يتاكد من الباسورد
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::post('/hotels/{hotel}/book', [BookingHotelController::class, 'book']);
-});
+// });
 // routes/api.php
 Route::middleware(['auth:sanctum', 'is_guide'])     // أو أيّ حارس تراه مناسباً
     ->get('/trips/{trip}/price‑suggestions', [TripPriceSuggestionController::class, 'index']);
