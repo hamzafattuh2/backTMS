@@ -68,75 +68,6 @@ public function getSiteDetails($id)
 }
 
 
-//  public function search(Request $request)
-//     {
-//         // التحقق من صحة المدخلات
-//         $validator = Validator::make($request->all(), [
-//             'query' => 'required|string|min:2',
-//             'category' => 'nullable|in:popular,nature,outdoors,historic,landmarks',
-//             'min_rating' => 'nullable|numeric|min:0|max:5',
-//             'limit' => 'nullable|integer|min:1|max:100',
-//         ]);
-
-//         if ($validator->fails()) {
-//             return response()->json([
-//                 'success' => false,
-//                 'errors' => $validator->errors()
-//             ], 422);
-//         }
-
-//         // البدء ببناء الاستعلام
-//         $query = TouristSite::query();
-
-//         // البحث عن الاسم (حساس وغير حساس للحالة)
-//         $searchTerm = $request->input('query');
-//         $query->where(function($q) use ($searchTerm) {
-//             $q->where('name', 'LIKE', "%{$searchTerm}%")
-//               ->orWhere('name', 'LIKE', "%".ucfirst($searchTerm)."%")
-//               ->orWhere('name', 'LIKE', "%".strtolower($searchTerm)."%")
-//               ->orWhere('name', 'LIKE', "%".strtoupper($searchTerm)."%");
-//         });
-
-//         // تصفية حسب التصنيف إذا موجود
-//         if ($request->has('category')) {
-//             $query->where('category', $request->category);
-//         }
-
-//         // تصفية حسب الحد الأدنى للتقييم إذا موجود
-//         if ($request->has('min_rating')) {
-//             $query->where('average_rating', '>=', $request->min_rating);
-//         }
-
-//         // تحديد عدد النتائج (القيمة الافتراضية 10)
-//         $limit = $request->input('limit', 10);
-//         $results = $query->limit($limit)->get();
-
-//         // تحسين شكل النتائج المرجعة
-//         $formattedResults = $results->map(function ($site) {
-//             return [
-//                 'id' => $site->id,
-//                 'name' => $site->name,
-//                 'main_image' => asset('storage/' . $site->main_image),
-//                 'gallery_images' => json_decode($site->gallery_images, true),
-//                 'address' => $site->address,
-//                 'category' => $site->category,
-//                 'average_rating' => $site->average_rating,
-//                 'views_count' => $site->views_count
-//             ];
-//         });
-
-//         return response()->json([
-//             'success' => true,
-//             'data' => $formattedResults,
-//             'meta' => [
-//                 'total_results' => $results->count(),
-//                 'search_term' => $searchTerm,
-//                 'filters_applied' => $request->only(['category', 'min_rating'])
-//             ]
-//         ]);
-//     }
-
-
 public function search(Request $request)
 {
     // التحقق من صحة المدخلات
@@ -262,4 +193,15 @@ public function search(Request $request)
         return $this->getImageUrl($image);
     }, $gallery);
 }
+
+public function mostViewedSites()
+{
+    $mostViewedSites = TouristSite::orderBy('views_count', 'desc')
+        ->take(5)
+        ->get(['id', 'name', 'main_image', 'address', 'average_rating', 'views_count']);
+
+    return response()->json([
+        'data' => $mostViewedSites
+    ]);}
+
 }

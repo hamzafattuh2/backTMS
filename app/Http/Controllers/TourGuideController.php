@@ -357,45 +357,84 @@ public function login(Request $request)
     }
 
     // تحديث البيانات الأساسية
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
+ public function updateProfile(Request $request)
+{
+    $user = Auth::user();
+    $changesDetected = false; // علامة لتتبع وجود تغييرات
 
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'phone_number' => 'sometimes|string|max:20',
-            'gender' => 'sometimes|string|in:male,female,other',
-            'birth_date' => 'sometimes|date',
-            'languages' => 'sometimes|string',
-            'years_of_experience' => 'sometimes|string'
-        ]);
+    $validator = Validator::make($request->all(), [
+        'first_name' => 'sometimes|string|max:255',
+        'last_name' => 'sometimes|string|max:255',
+        'phone_number' => 'sometimes|string|max:20',
+        'gender' => 'sometimes|string|in:male,female,other',
+        'birth_date' => 'sometimes|date',
+        'languages' => 'sometimes|string',
+        'years_of_experience' => 'sometimes|string',
+        'current_password' => 'required_with:new_password|string',
+        'new_password' => 'nullable|sometimes|string|min:8|confirmed',
+    ]);
 
-        if ($validator->fails()) {
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Validation error',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    // التحقق من كلمة المرور الحالية إذا تم تقديم كلمة مرور جديدة
+    if ($request->has('new_password')) {
+        if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => ['current_password' => ['كلمة المرور الحالية غير صحيحة']]
             ], 422);
         }
 
-        // تحديث بيانات المستخدم
-        $user->update($request->only([
-            'first_name', 'last_name', 'phone_number', 'gender', 'birth_date'
-        ]));
-
-        // إذا كان مرشداً سياحياً، تحديث بيانات المرشد
-        if ($user->tourGuide) {
-            $user->tourGuide->update($request->only([
-                'languages', 'years_of_experience'
-            ]));
+        // التحقق إذا كانت كلمة المرور الجديدة مختلفة عن القديمة
+        if (!Hash::check($request->new_password, $user->password)) {
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+            $changesDetected = true;
         }
-
-        return response()->json([
-            'message' => 'تم تحديث الملف الشخصي بنجاح',
-            'user' => $user->load('tourGuide'),
-            // 'guide'=>$user->tourGuide
-        ]);
     }
+
+    // تحديث بيانات المستخدم مع التحقق من التغييرات
+    $userData = $request->only(['first_name', 'last_name', 'phone_number', 'gender', 'birth_date']);
+    foreach ($userData as $key => $value) {
+        if ($user->$key != $value) {
+            $user->$key = $value;
+            $changesDetected = true;
+        }
+    }
+    $user->save();
+
+    // تحديث بيانات المرشد السياحي مع التحقق من التغييرات
+    if ($user->tourGuide) {
+        $guideData = $request->only(['languages', 'years_of_experience']);
+        foreach ($guideData as $key => $value) {
+            if ($user->tourGuide->$key != $value) {
+                $user->tourGuide->$key = $value;
+                $changesDetected = true;
+            }
+        }
+        $user->tourGuide->save();
+    }
+
+    if (!$changesDetected) {
+        return response()->json([
+            'message' => 'لم يتم تغيير أي بيانات، جميع البيانات مطابقة لما هو موجود في النظام'
+        ], 200);
+    }
+    $profileImage = $user->profile_image;
+ $imageUrl = $profileImage
+            ? asset('storage/' . $profileImage)
+            : null;
+    return response()->json([
+        'message' => 'تم تحديث الملف الشخصي بنجاح',
+        'user' => $user->load('tourGuide'),
+        'url_profile_img'=> $imageUrl
+    ], 200);
+}
 
     // تحديث صورة الملف الشخصي
     public function updateProfileImage(Request $request)
@@ -407,15 +446,16 @@ public function login(Request $request)
         $user = Auth::user();
 
         // حذف الصورة القديمة إذا كانت موجودة
-        if ($user->profile_image) {
-            $oldImagePath = 'public/' . $user->profile_image;
-            Storage::delete($oldImagePath);
-        }
+        // if ($user->profile_image) {
+        //     $oldImagePath = 'public/' . $user->profile_image;
+        //     Storage::delete($oldImagePath);
+        // }
 
         // حفظ الصورة الجديدة
         $image = $request->file('profile_image');
         $imageName = time() . '_' . $image->getClientOriginalName();
-        $imagePath = $image->storeAs('public/img_prof', $imageName);
+            $imagePath = $image->storeAs('img_prof', $imageName, 'public');
+
 
         // تحديث قاعدة البيانات
         $user->profile_image = 'img_prof/' . $imageName;
