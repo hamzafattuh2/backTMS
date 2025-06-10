@@ -142,3 +142,14 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/tourist-sites/search', [TouristSiteController::class, 'search']);
 
 });
+Route::middleware('auth:sanctum')->group(function () {
+
+Route::post('/hotels/search', [HotelController::class, 'searchByName']);
+});
+
+Route::middleware(['auth:sanctum','is_guide'])->group(function () {
+    // ملف المرشد السياحي
+    Route::get('tour-guide/profile', [TourGuideController::class, 'getProfile']);
+    Route::post('tour-guide/profile/update', [TourGuideController::class, 'updateProfile']);
+    Route::post('tour-guide/profile/update-image', [TourGuideController::class, 'updateProfileImage']);
+});

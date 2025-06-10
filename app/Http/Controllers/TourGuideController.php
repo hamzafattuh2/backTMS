@@ -11,6 +11,9 @@ use App\Models\Wallet;
 use App\Notifications\BroadcastToGuides;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class TourGuideController extends Controller
 {
@@ -145,12 +148,6 @@ public function login(Request $request)
                 'cv_path' => 'required|file|mimes:pdf|max:5120', // ملف PDF بحد أقصى 5MB
             ]);
 
-            // if ($request->hasFile('profile_image')) {
-            //     $profilePath = $request->file('profile_image')->store('public/profile_images');
-            //     $profilePicturePath = str_replace('public/', '', $profilePath);
-            // } else {
-            //     $profilePicturePath = null;
-            // }
              $profilePicturePath = null;
         if ($request->hasFile('profile_image')) {
             $image = $request->file('profile_image');
@@ -173,7 +170,7 @@ public function login(Request $request)
             $relativeCvPath = $image->storeAs('cv', $fileName, 'public');
         }
 
-       
+
             //add new user
             $user = User::create([
                 'user_name' => $validatedData['user_name'],
@@ -326,4 +323,109 @@ public function login(Request $request)
             'guides_notified' => $guides->count(),
         ], 200);
     }
+ public function getProfile(Request $request)
+    {
+        $user = $request->user();
+        $tourGuide = $user->tourGuide;
+
+        $response = [
+            'user_name' => $user->user_name,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'phone_number' => $user->phone_number,
+            'profile_image' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
+            'gender' => $user->gender,
+            'birth_date' => $user->birth_date,
+        ];
+
+        // إذا كان المستخدم مرشداً سياحياً
+        if ($tourGuide) {
+            $response = array_merge($response, [
+                'languages' => $tourGuide->languages,
+                'years_of_experience' => $tourGuide->years_of_experience,
+                'license_picture_url' => $tourGuide->license_picture_path ? asset('storage/'.$tourGuide->license_picture_path) : null,
+                'cv_url' => $tourGuide->cv_path ? asset('storage/'.$tourGuide->cv_path) : null,
+                'confirmByAdmin' => $tourGuide->confirmByAdmin
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'تم جلب بيانات الملف الشخصي بنجاح',
+            'data' => $response
+        ]);
+    }
+
+    // تحديث البيانات الأساسية
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'sometimes|string|max:255',
+            'last_name' => 'sometimes|string|max:255',
+            'phone_number' => 'sometimes|string|max:20',
+            'gender' => 'sometimes|string|in:male,female,other',
+            'birth_date' => 'sometimes|date',
+            'languages' => 'sometimes|string',
+            'years_of_experience' => 'sometimes|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // تحديث بيانات المستخدم
+        $user->update($request->only([
+            'first_name', 'last_name', 'phone_number', 'gender', 'birth_date'
+        ]));
+
+        // إذا كان مرشداً سياحياً، تحديث بيانات المرشد
+        if ($user->tourGuide) {
+            $user->tourGuide->update($request->only([
+                'languages', 'years_of_experience'
+            ]));
+        }
+
+        return response()->json([
+            'message' => 'تم تحديث الملف الشخصي بنجاح',
+            'user' => $user->load('tourGuide'),
+            // 'guide'=>$user->tourGuide
+        ]);
+    }
+
+    // تحديث صورة الملف الشخصي
+    public function updateProfileImage(Request $request)
+    {
+        $request->validate([
+            'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $user = Auth::user();
+
+        // حذف الصورة القديمة إذا كانت موجودة
+        if ($user->profile_image) {
+            $oldImagePath = 'public/' . $user->profile_image;
+            Storage::delete($oldImagePath);
+        }
+
+        // حفظ الصورة الجديدة
+        $image = $request->file('profile_image');
+        $imageName = time() . '_' . $image->getClientOriginalName();
+        $imagePath = $image->storeAs('public/img_prof', $imageName);
+
+        // تحديث قاعدة البيانات
+        $user->profile_image = 'img_prof/' . $imageName;
+        $user->save();
+
+        return response()->json([
+            'message' => 'تم تحديث الصورة بنجاح',
+            'profile_image_url' => asset(Storage::url($imagePath))
+        ]);
+    }
+
+
 }

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 class HotelController extends Controller
 {
     // API 1: Get all hotels with basic information
- 
+
    public function index(){
     $hotels = Hotel::select('id', 'name', 'city', 'rating', 'number_of_reviews', 'price_per_night', 'images')
         ->where('is_active', true)
@@ -237,4 +237,86 @@ class HotelController extends Controller
         $hotel->delete();
         return redirect()->route('admin.hotels.index')->with('success', 'Hotel deleted successfully');
     }
+  public function searchByName(Request $request)
+    {
+        // التحقق من صحة المدخلات (الاسم فقط)
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|min:2',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation errors',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // البحث حسب الاسم فقط
+        $searchTerm = $request->input('name');
+        $results = Hotel::where('name', 'LIKE', "%{$searchTerm}%")
+                      ->where('is_active', true) // فقط الفنادق النشطة
+                      ->orderBy('rating', 'desc') // الترتيب حسب التقييم
+                      ->get();
+
+        // إذا لم توجد نتائج
+        if ($results->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hotels found matching your search',
+                'suggestions' => [
+                    'Try a different name',
+                    'Check the spelling'
+                ]
+            ], 404);
+        }
+
+        // تنسيق النتائج
+        $formattedResults = $results->map(function ($hotel) {
+            return [
+                'id' => $hotel->id,
+                'name' => $hotel->name,
+                'city' => $hotel->city,
+                'address' => $hotel->address,
+                'rating' => $hotel->rating,
+                'price_per_night' => $hotel->price_per_night,
+                'main_image' => $this->getMainImage($hotel->images),
+                'stars' => $hotel->stars,
+                'available_rooms' => $hotel->available_rooms
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedResults,
+            'meta' => [
+                'total_results' => $results->count(),
+                'search_term' => $searchTerm
+            ]
+        ]);
+    }
+
+    /**
+     * الحصول على الصورة الرئيسية
+     */
+    private function getMainImage($images)
+{
+    if (empty($images)) {
+        return null;
+    }
+
+    // إذا كانت الصور مصفوفة بالفعل (كما هو الحال عند استرجاعها من قاعدة البيانات)
+    if (is_array($images)) {
+        return $images[0] ?? null; // أول صورة هي الصورة الرئيسية
+    }
+
+    // إذا كانت سلسلة نصية (JSON) نحاول تحليلها
+    $decodedImages = json_decode($images, true);
+
+    if (is_array($decodedImages) && count($decodedImages) > 0) {
+        return $decodedImages[0];
+    }
+
+    return null;
+}
 }

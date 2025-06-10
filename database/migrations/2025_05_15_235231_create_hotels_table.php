@@ -21,13 +21,12 @@ return new class extends Migration
             $table->decimal('price_per_night', 10, 2);
             $table->json('images'); // Will store array of image URLs [main_image, sub_image1, sub_image2, sub_image3, sub_image4]
             $table->text('description');
-            $table->unsignedTinyInteger('stars')->nullable();
             $table->json('amenities')->nullable();
             $table->string('contact_email')->nullable();
             $table->string('contact_phone')->nullable();
             $table->boolean('is_active')->nullable()->default(true);
-            $table->string('guide_name')->nullable();
-            $table->integer('available_seats')->nullable();
+            $table->unsignedTinyInteger('stars')->nullable();
+            $table->integer('available_rooms')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
