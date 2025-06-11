@@ -153,11 +153,11 @@ Route::middleware(['auth:sanctum','is_guide'])->group(function () {
     Route::post('tour-guide/profile/update-image', [TourGuideController::class, 'updateProfileImage']);
 
 });
-Route::middleware(['auth:sanctum','is_guide'])->group(function () {
+// Route::middleware(['auth:sanctum','is_guide'])->group(function () {
 
 Route::get('tourist-sites/most-viewed', [TouristSiteController::class, 'mostViewedSites']);
 
 Route::get('/tourist-sites/top-viewed', [TouristSiteController::class, 'topViewedSites']);
 Route::get('/trips', [TripController::class, 'showAllTrips']);
 Route::get('/trip-detail/{id}', [TripController::class, 'showDetail']);
-});
+// });

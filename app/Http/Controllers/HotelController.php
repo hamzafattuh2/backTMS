@@ -287,12 +287,12 @@ class HotelController extends Controller
         });
 
         return response()->json([
-            'success' => true,
+            // 'success' => true,
             'data' => $formattedResults,
-            'meta' => [
-                'total_results' => $results->count(),
-                'search_term' => $searchTerm
-            ]
+            // 'meta' => [
+            //     'total_results' => $results->count(),
+            //     'search_term' => $searchTerm
+            // ]
         ]);
     }
 

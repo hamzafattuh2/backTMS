@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class WalletController extends Controller
 {
     // إيداع أموال لمستخدم معين
-    public function deposit(Request $request)
+     public function deposit(Request $request)
     {
         $user = Auth::user()->id;
         $wallet = Wallet::where('user_id',$user)->first();

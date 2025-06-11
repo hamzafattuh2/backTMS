@@ -149,17 +149,17 @@ public function search(Request $request)
     ]);
 
     return response()->json([
-        'success' => true,
+        // 'success' => true,
         'data' => $formattedResults,
-        'meta' => [
-            'total_results' => $results->count(),
-            // 'filters_applied' => $request->only(['query', 'category', 'min_rating']),
-              'filters_applied' => $request->only('query'),
-            // 'sorting' => [
-            //     'by' => 'views_count',
-            //     'order' => $sortOrder
-            // ]
-        ]
+        // 'meta' => [
+        //     'total_results' => $results->count(),
+        //     // 'filters_applied' => $request->only(['query', 'category', 'min_rating']),
+        //       'filters_applied' => $request->only('query'),
+        //     // 'sorting' => [
+        //     //     'by' => 'views_count',
+        //     //     'order' => $sortOrder
+        //     // ]
+        // ]
     ]);
 }
 
