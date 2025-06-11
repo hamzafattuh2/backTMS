@@ -140,7 +140,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
 Route::post('/tourist-sites/search', [TouristSiteController::class, 'search']);
-Route::get('tourist-sites/most-viewed', [TouristSiteController::class, 'mostViewedSites']);
 });
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -153,4 +152,5 @@ Route::middleware(['auth:sanctum','is_guide'])->group(function () {
     Route::post('tour-guide/profile/update', [TourGuideController::class, 'updateProfile']);
     Route::post('tour-guide/profile/update-image', [TourGuideController::class, 'updateProfileImage']);
 });
+Route::get('tourist-sites/most-viewed', [TouristSiteController::class, 'mostViewedSites']);
 

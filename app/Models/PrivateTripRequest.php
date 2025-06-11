@@ -2,33 +2,37 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PrivateTripRequest extends Model
 {
-    use HasFactory;
+    protected $table = 'private_trip_requests';
 
     protected $fillable = [
+        'user_id',
         'trip_id',
-        'tourist_id',
-        'guide_id',
-        'title_request',
-        'status'
+        'tour_id',
+        'start_date',
+        'end_date',
+        'lang',
+        'days',
+        'count_days',
+        'status',
     ];
+
+    // If you want to use relationships (optional)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function trip()
     {
         return $this->belongsTo(Trip::class);
     }
 
-    public function tourist()
+    public function tourGuide()
     {
-        return $this->belongsTo(User::class, 'tourist_id');
+        return $this->belongsTo(TourGuide::class, 'tour_id');
     }
-
-public function guide()
-{
-    return $this->belongsTo(TourGuide::class);
-}
 }

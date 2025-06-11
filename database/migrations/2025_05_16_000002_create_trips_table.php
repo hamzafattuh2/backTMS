@@ -26,7 +26,6 @@ return new class extends Migration
     $table->string('status')->nullable(); // تعديل: جعل الحالة nullable
 
     $table->enum('public_or_private', ['public', 'private'])->nullable(); // تعديل: جعل النوع nullable
-
     $table->boolean('delete_able')->default(true);
     $table->boolean('confirm_by_Guide')->default(false );
     $table->timestamps(); // ينصح بوجود timestamps للتتبع

@@ -20,4 +20,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('trip_price_suggestions');
     }
-}; 
+};

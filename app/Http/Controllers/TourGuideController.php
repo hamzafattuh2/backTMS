@@ -360,7 +360,8 @@ public function login(Request $request)
  public function updateProfile(Request $request)
 {
     $user = Auth::user();
-    $changesDetected = false; // علامة لتتبع وجود تغييرات
+    $changesDetected = false;
+    $passwordChanged = false;
 
     $validator = Validator::make($request->all(), [
         'first_name' => 'sometimes|string|max:255',
@@ -370,7 +371,6 @@ public function login(Request $request)
         'birth_date' => 'sometimes|date',
         'languages' => 'sometimes|string',
         'years_of_experience' => 'sometimes|string',
-        'current_password' => 'required_with:new_password|string',
         'new_password' => 'nullable|sometimes|string|min:8|confirmed',
     ]);
 
@@ -381,24 +381,16 @@ public function login(Request $request)
         ], 422);
     }
 
-    // التحقق من كلمة المرور الحالية إذا تم تقديم كلمة مرور جديدة
-    if ($request->has('new_password')) {
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => ['current_password' => ['كلمة المرور الحالية غير صحيحة']]
-            ], 422);
-        }
-
-        // التحقق إذا كانت كلمة المرور الجديدة مختلفة عن القديمة
+    // Handle password update (without requiring current password)
+    if ($request->filled('new_password')) {
         if (!Hash::check($request->new_password, $user->password)) {
             $user->password = Hash::make($request->new_password);
-            $user->save();
+            $passwordChanged = true;
             $changesDetected = true;
         }
     }
 
-    // تحديث بيانات المستخدم مع التحقق من التغييرات
+    // Update user basic info
     $userData = $request->only(['first_name', 'last_name', 'phone_number', 'gender', 'birth_date']);
     foreach ($userData as $key => $value) {
         if ($user->$key != $value) {
@@ -406,9 +398,12 @@ public function login(Request $request)
             $changesDetected = true;
         }
     }
-    $user->save();
 
-    // تحديث بيانات المرشد السياحي مع التحقق من التغييرات
+    if ($changesDetected) {
+        $user->save();
+    }
+
+    // Update tour guide info if user is a guide
     if ($user->tourGuide) {
         $guideData = $request->only(['languages', 'years_of_experience']);
         foreach ($guideData as $key => $value) {
@@ -417,24 +412,28 @@ public function login(Request $request)
                 $changesDetected = true;
             }
         }
-        $user->tourGuide->save();
+        if ($changesDetected) {
+            $user->tourGuide->save();
+        }
     }
 
     if (!$changesDetected) {
         return response()->json([
-            'message' => 'لم يتم تغيير أي بيانات، جميع البيانات مطابقة لما هو موجود في النظام'
+            'message' => 'No data has changed. Everything is already up to date.'
         ], 200);
     }
+
     $profileImage = $user->profile_image;
- $imageUrl = $profileImage
-            ? asset('storage/' . $profileImage)
-            : null;
+    $imageUrl = $profileImage ? asset('storage/' . $profileImage) : null;
+
     return response()->json([
-        'message' => 'تم تحديث الملف الشخصي بنجاح',
+        'message' => 'Profile updated successfully.',
+        'update_password'=>   ($passwordChanged ? ' Password updated successfully.' : 'No new password was entered so the password was not changed.'),
         'user' => $user->load('tourGuide'),
-        'url_profile_img'=> $imageUrl
+        'url_profile_img' => $imageUrl
     ], 200);
 }
+
 
     // تحديث صورة الملف الشخصي
     public function updateProfileImage(Request $request)
