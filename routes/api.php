@@ -148,9 +148,16 @@ Route::post('/hotels/search', [HotelController::class, 'searchByName']);
 
 Route::middleware(['auth:sanctum','is_guide'])->group(function () {
     // ملف المرشد السياحي
-    Route::get('tour-guide/profile', [TourGuideController::class, 'getProfile']);
+    Route::get('tour-guide/profile', [TourGuideController::class, 'getProfile']);//
     Route::post('tour-guide/profile/update', [TourGuideController::class, 'updateProfile']);
     Route::post('tour-guide/profile/update-image', [TourGuideController::class, 'updateProfileImage']);
+
 });
+Route::middleware(['auth:sanctum','is_guide'])->group(function () {
+
 Route::get('tourist-sites/most-viewed', [TouristSiteController::class, 'mostViewedSites']);
 
+Route::get('/tourist-sites/top-viewed', [TouristSiteController::class, 'topViewedSites']);
+Route::get('/trips', [TripController::class, 'showAllTrips']);
+Route::get('/trip-detail/{id}', [TripController::class, 'showDetail']);
+});

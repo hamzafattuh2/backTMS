@@ -196,7 +196,7 @@ public function search(Request $request)
 
 public function mostViewedSites()
 {
-    $mostViewedSites = TouristSite::orderBy('views_count', 'desc')
+    $mostViewedSites = TouristSite::orderBy('views_count')
         ->take(5)
         ->get(['id', 'name', 'main_image', 'address', 'average_rating', 'views_count']);
 
@@ -204,4 +204,29 @@ public function mostViewedSites()
         'data' => $mostViewedSites
     ]);}
 
+    public function topViewedSites()
+{
+    $minViewsThreshold = 5; // الحد الأدنى للمشاهدات
+
+    $topSites = TouristSite::where('views_count', '>', $minViewsThreshold)
+        ->orderBy('views_count', 'desc')
+        ->take(5)
+        ->get([
+            'id',
+            'name',
+            'main_image',
+            'address',
+            'average_rating',
+            'views_count',
+            'category'
+        ]);
+
+    return response()->json([
+        'count' => $topSites->count(),
+        'data' => $topSites,
+        'message' => $topSites->isEmpty()
+            ? 'No sites meet the minimum views requirement'
+            : 'Top 5 most viewed tourist sites'
+    ]);
+}
 }

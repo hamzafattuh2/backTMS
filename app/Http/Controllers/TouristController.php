@@ -232,7 +232,7 @@ public function updateProfile(Request $request)
         'message' => 'تم جلب الصورة بنجاح',
         'profile_image_url' => asset('storage/' . $imagePath),
         'user'=> $user,
-        'tourist'=>$user->tourist,  
+        'tourist'=>$user->tourist,
     ]);
 }
 
@@ -274,7 +274,9 @@ public function getProfile(Request $request)
         'last_name' => $user->last_name,
         'email' => $user->email,
         'phone_number' => $user->phone_number,
-        'profile_image' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
+        'profile_image' =>$user->profile_image,
+        'profile_image_url' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
+
         'gender' => $user->gender,
         'birth_date' => $user->birth_date,
     ];

@@ -9,9 +9,11 @@ return new class extends Migration
     {
         Schema::create('trip_activities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('trip_day_id')->constrained('trip_days')->onDelete('cascade');
-            $table->string('title');
-            $table->text('description');
+            $table->foreignId('trip_id')->constrained('trips')->onDelete('cascade');
+            $table->string('title')->nullable();
+            $table->text('description');//each day will describe the activity inside it
+             $table->string('day_number');//like day1 ,day2 ,day3 ,day4 ,day5
+            $table->date('date');
             $table->timestamps();
         });
     }
@@ -19,4 +21,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('trip_activities');
     }
-}; 
+};

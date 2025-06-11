@@ -12,21 +12,22 @@ class Trip extends Model
         'end_date'   => 'datetime',
     ];
 
-    protected $fillable = [
-    'user_id',
-    'guide_id',
-    'title',
-    'description',
-    'start_date',
-    'end_date',
-    'languageOfTrip',
-    'days_count',
-    'price',
-    'status',
-    'public_or_private',
-    'delete_able',
-    'confirm_by_guide',
-];
+//     protected $fillable = [
+//     'user_id',
+//     'guide_id',
+//     'title',
+//     'description',
+//     'start_date',
+//     'end_date',
+//     'languageOfTrip',
+//     'days_count',
+//     'price',
+//     'status',
+//     'public_or_private',
+//     'delete_able',
+//     'confirm_by_guide',
+// ];
+  protected $guarded = [];
 
     // protected $fillable = [
     //     'user_id', 'guide_id', 'title', 'description', 'start_date', 'end_date', 'language_guide', 'days_count', 'price', 'status', 'public_or_private', 'delete_able'
@@ -40,6 +41,10 @@ public function privateRequests()
 {
     return $this->hasMany(PrivateTripRequest::class);
 }
+  public function activities()
+    {
+        return $this->hasMany(TripActivity::class);
+    }
     public function owner() { return $this->belongsTo(User::class, 'user_id'); }
     public function guide() { return $this->belongsTo(User::class, 'guide_id'); }
     public function tripDays() { return $this->hasMany(TripDay::class); }

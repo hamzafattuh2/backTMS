@@ -334,7 +334,9 @@ public function login(Request $request)
             'last_name' => $user->last_name,
             'email' => $user->email,
             'phone_number' => $user->phone_number,
-            'profile_image' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
+            'profile_image' => $user->profile_image,
+            'profile_image_url' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
+
             'gender' => $user->gender,
             'birth_date' => $user->birth_date,
         ];
@@ -445,10 +447,10 @@ public function login(Request $request)
         $user = Auth::user();
 
         // حذف الصورة القديمة إذا كانت موجودة
-        // if ($user->profile_image) {
-        //     $oldImagePath = 'public/' . $user->profile_image;
-        //     Storage::delete($oldImagePath);
-        // }
+        if ($user->profile_image) {
+             $oldImagePath = 'img_prof/' . basename($user->profile_image);
+    Storage::disk('public')->delete($oldImagePath);
+        }
 
         // حفظ الصورة الجديدة
         $image = $request->file('profile_image');
@@ -463,6 +465,7 @@ public function login(Request $request)
         return response()->json([
             'message' => 'تم تحديث الصورة بنجاح',
             'profile_image_url' => asset(Storage::url($imagePath))
+            ,'profile_image'=>$imagePath
         ]);
     }
 

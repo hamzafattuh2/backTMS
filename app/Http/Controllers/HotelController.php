@@ -62,11 +62,11 @@ class HotelController extends Controller
                 return [
                     'id' => $hotel->id,
                     'name' => $hotel->name,
-                    'location' => $hotel->city,
-                    'reviews' => [
+                    'city' => $hotel->city,
+
                         'rating' => $hotel->rating,
                         'number_of_reviews' => $hotel->number_of_reviews
-                    ],
+                   ,
                     'price_per_night' => $hotel->price_per_night
                 ];
             });

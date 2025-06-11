@@ -7,29 +7,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('trips', function (Blueprint $table) {
-
-             $table->id();
+Schema::create('trips', function (Blueprint $table) {
+    $table->id();
     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
     $table->foreignId('guide_id')->nullable()->constrained('tour_guides')->onDelete('set null');
 
-    $table->string('title')->nullable(); // تعديل: جعل العنوان nullable
-    $table->text('description');
+    // المعلومات الأساسية
+    $table->string('name');
+    $table->string('city'); // مدينة الرحلة
+    $table->text('overview'); // نظرة عامة
+    $table->text('short_overview'); // نظرة مختصرة
 
-    $table->dateTime('start_date');
-    $table->dateTime('end_date')->nullable(); // تعديل: جعل تاريخ النهاية nullable
+    // الصور
+    $table->string('main_image'); // الصورة الرئيسية
+    $table->json('gallery_images')->nullable(); // 4 صور فرعية (كمصفوفة JSON)
 
-    $table->string('languageOfTrip');
-    $table->integer('days_count');
-    $table->decimal('price', 10, 2)->nullable();
+    // تفاصيل الرحلة
+    $table->dateTime('start_at')->nullable();
+    $table->dateTime('end_at')->nullable();
+    $table->string('language', 50)->nullable();
+    $table->unsignedSmallInteger('duration_days')->nullable();
+    $table->decimal('price_per_night', 10, 2)->nullable();
+    $table->unsignedInteger('available_seats')->default(1); // المقاعد المتاحة
 
-    $table->string('status')->nullable(); // تعديل: جعل الحالة nullable
+    // الحالة والإعدادات
+    $table->enum('status', ['draft', 'published', 'ongoing', 'completed', 'cancelled'])->default('draft');
+    $table->enum('visibility', ['public', 'private'])->default('public');
+    $table->boolean('is_removable')->default(true);
+    $table->boolean('is_guide_confirmed')->default(false);
 
-    $table->enum('public_or_private', ['public', 'private'])->nullable(); // تعديل: جعل النوع nullable
-    $table->boolean('delete_able')->default(true);
-    $table->boolean('confirm_by_Guide')->default(false );
-    $table->timestamps(); // ينصح بوجود timestamps للتتبع
-        });
+    $table->timestamps();
+});
     }
  public function down()
 {

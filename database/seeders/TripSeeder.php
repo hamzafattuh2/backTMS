@@ -4,258 +4,80 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Trip;
-use App\Models\User;
-use App\Models\TourGuide;
-use App\Models\TripPriceSuggestion;
+use App\Models\TripActivity;
+use Faker\Factory as Faker;
+use Carbon\Carbon;
 
 class TripSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        // التأكد من وجود مستخدمين لاستخدامهم كـ user_id و guide_id
-        $users = User::take(1)->get();
-        $guide = TourGuide::take(2)->get();
+        $faker = Faker::create('en_US');
 
+        // تعطيل فحص المفاتيح الأجنبية مؤقتاً
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-        $user1 = $users[0]; // السائح
-        $guide1 = $guide[0]; // مرشد صحيح
-        $guide2 = $guide[1]; // مرشد خاطئ لحالة الاختبار
+        TripActivity::query()->delete();
+        Trip::query()->delete();
 
-        // إضافة الرحلات الأصلية
-        Trip::insert([
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => $guide1->id,
-                'title' => 'Explore the Nile',
-                'description' => 'A 5-day journey exploring the beauty of the Nile River.',
-                'start_date' => now()->addDays(5),
-                'end_date' => now()->addDays(10),
-                'languageOfTrip' => 'English',
-                'days_count' => 5,
-                'price' => 1200.00,
-                'status' => 'upcoming',
-                'public_or_private' => 'public',
-                'delete_able' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => null,
-                'title' => 'Desert Safari Adventure',
-                'description' => 'tripsWithoutGuide',
-                'start_date' => now()->addDays(15),
-                'end_date' => now()->addDays(17),
-                'languageOfTrip' => 'Arabic',
-                'days_count' => 2,
-                'price' => 800.00,
-                'status' => 'pending',
-                'public_or_private' => 'private',
-                'delete_able' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => null,
-                'title' => 'Desert Safari Adventure',
-                'description' => 'tripsWithoutGuide',
-                'start_date' => now()->addDays(15),
-                'end_date' => now()->addDays(17),
-                'languageOfTrip' => 'Arabic',
-                'days_count' => 2,
-                'price' => 800.00,
-                'status' => 'waiting_guide',
-                'public_or_private' => 'private',
-                'delete_able' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => $guide1->id,
-                'title' => 'ongoing trip public',
-                'description' => 'Experience the thrill of the desert in this private tour.',
-                'start_date' => now()->addDays(11),
-                'end_date' => now()->addDays(14),
-                'languageOfTrip' => 'Arabic',
-                'days_count' => 2,
-                'price' => 800.00,
-                'status' => 'ongoing',
-                'public_or_private' => 'public',
-                'delete_able' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => $guide2->id,
-                'title' => 'ongoing trip private',
-                'description' => 'Experience the thrill of the desert in this private tour.',
-                'start_date' => now()->addDays(11),
-                'end_date' => now()->addDays(14),
-                'languageOfTrip' => 'Arabic',
-                'days_count' => 2,
-                'price' => 800.00,
-                'status' => 'ongoing',
-                'public_or_private' => 'private',
-                'delete_able' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => $guide1->id,
-                'title' => 'guideCompletedPrivateTrips',
-                'description' => 'Experience the thrill of the desert in this private tour.',
-                'start_date' => now()->addDays(11),
-                'end_date' => now()->addDays(14),
-                'languageOfTrip' => 'Arabic',
-                'days_count' => 2,
-                'price' => 800.00,
-                'status' => 'ongoing',
-                'public_or_private' => 'private',
-                'delete_able' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => $users[0]->id,
-                'guide_id' => $guide2->id,
-                'title' => 'guideCompletedPublicTrips',
-                'description' => 'Experience the thrill of the desert in this private tour.',
-                'start_date' => now()->addDays(11),
-                'end_date' => now()->addDays(14),
-                'languageOfTrip' => 'Arabic',
-                'days_count' => 2,
-                'price' => 800.00,
-                'status' => 'ongoing',
-                'public_or_private' => 'public',
-                'delete_able' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        // تمكين فحص المفاتيح الأجنبية مرة أخرى
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        // إضافة الحالات الجديدة
-        $trip4 = Trip::create([
-            'user_id' => $user1->id,
-            'guide_id' => null,
-            'title' => 'Trip Case 1 ',
-            'description' => 'Case 1: Trip is public',
-            'start_date' => now()->addDays(1),
-            'end_date' => now()->addDays(2),
-            'languageOfTrip' => 'English',
-            'days_count' => 1,
-            'price' => null,
-            'status' => 'pending',
-            'public_or_private' => 'public',
-            'delete_able' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // إنشاء 20 رحلة وهمية باللغة الإنجليزية
+        for ($i = 1; $i <= 20; $i++) {
+         $startDate = Carbon::now()->addDays(rand(1, 60));
+$endDate = (clone $startDate)->addDays(rand(1, 14)); // هذا يضمن أن endDate بعد startDate
+            $trip = Trip::create([
+                'user_id' => 1,
+                'guide_id' => 2,
+                'name' => $faker->words(3, true) . ' Tour', // مثال: "Beautiful Mountain Tour"
+                'city' => $faker->city,
+                'overview' => $faker->paragraph(3),
+                'short_overview' => $faker->sentence(10),
+                'main_image' => 'trip_images/main_' . $i . '.jpg',
+                'gallery_images' => json_encode([
+                    'trip_images/gallery1_' . $i . '.jpg',
+                    'trip_images/gallery2_' . $i . '.jpg',
+                    'trip_images/gallery3_' . $i . '.jpg',
+                    'trip_images/gallery4_' . $i . '.jpg'
+                ]),
+                'start_at' => $startDate,
+                'end_at' => $endDate,
+                'language' => $faker->randomElement(['English', 'Arabic', 'French', 'Spanish']),
+                'duration_days' => abs($endDate->diffInDays($startDate)),
+                // 'duration_days' => $endDate->diffInDays($startDate),
+                'price_per_night' => $faker->randomFloat(2, 100, 500),
+                'available_seats' => $faker->numberBetween(5, 30),
+                'status' => $faker->randomElement(['draft', 'published', 'ongoing', 'completed', 'cancelled']),
+                'visibility' => $faker->randomElement(['public', 'private']),
+                'is_removable' => $faker->boolean(90),
+                'is_guide_confirmed' => $faker->boolean(70),
+            ]);
 
-        $trip5 = Trip::create([
-            'user_id' => $user1->id,
-            'guide_id' => $guide2->id,
-            'title' => 'Trip Case 2',
-            'description' => 'Case 2: Guide already assigned and not current user',
-            'start_date' => now()->addDays(3),
-            'end_date' => now()->addDays(5),
-            'languageOfTrip' => 'French',
-            'days_count' => 2,
-            'price' => null,
-            'status' => 'pending',
-            'public_or_private' => 'private',
-            'delete_able' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            // إنشاء أنشطة لكل رحلة
+            $this->createActivitiesForTrip($trip, $faker);
+        }
+    }
 
-        $trip6 = Trip::create([
-            'user_id' => $user1->id,
-            'guide_id' => null,
-            'title' => 'Trip Case 3',
-            'description' => 'Case 3: Price already set in trip',
-            'start_date' => now()->addDays(4),
-            'end_date' => now()->addDays(6),
-            'languageOfTrip' => 'German',
-            'days_count' => 2,
-            'price' => 900.00,
-            'status' => 'pending',
-            'public_or_private' => 'private',
-            'delete_able' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+    protected function createActivitiesForTrip($trip, $faker)
+    {
+        $daysCount = $trip->duration_days;
+        $currentDate = clone $trip->start_at;
 
-        $trip7 = Trip::create([
-            'user_id' => $user1->id,
-            'guide_id' => null,
-            'title' => 'Trip Case 4',
-            'description' => 'Case 4: Suggestion already accepted',
-            'start_date' => now()->addDays(7),
-            'end_date' => now()->addDays(10),
-            'languageOfTrip' => 'Spanish',
-            'days_count' => 3,
-            'price' => null,
-            'status' => 'pending',
-            'public_or_private' => 'private',
-            'delete_able' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        for ($day = 1; $day <= $daysCount; $day++) {
+            $activityCount = rand(1, 4);
 
-        TripPriceSuggestion::create([
-            'trip_id' => $trip7->id,
-            'guide_id' => $guide1->id,
-            'price' => 1000,
-            'is_accepted' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            for ($a = 1; $a <= $activityCount; $a++) {
+                TripActivity::create([
+                    'trip_id' => $trip->id,
+                    'title' => $faker->words(2, true) . ' Activity', // مثال: "City Tour Activity"
+                    'description' => $faker->paragraph(2),
+                    'day_number' => 'day' . $day,
+                    'date' => $currentDate->format('Y-m-d'),
+                ]);
+            }
 
-        $trip8 = Trip::create([
-            'user_id' => $user1->id,
-            'guide_id' => null,
-            'title' => 'Trip Case 5',
-            'description' => 'Case 5: Pending suggestion already exists',
-            'start_date' => now()->addDays(8),
-            'end_date' => now()->addDays(9),
-            'languageOfTrip' => 'Arabic',
-            'days_count' => 1,
-            'price' => null,
-            'status' => 'pending',
-            'public_or_private' => 'private',
-            'delete_able' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        TripPriceSuggestion::create([
-            'trip_id' => $trip8->id,
-            'guide_id' => $guide1->id,
-            'price' => 800,
-            'is_accepted' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        Trip::create([
-            'user_id' => $user1->id,
-            'guide_id' => null,
-            'title' => 'Trip Case 6',
-            'description' => 'Case 6: Success - Eligible to offer price',
-            'start_date' => now()->addDays(10),
-            'end_date' => now()->addDays(12),
-            'languageOfTrip' => 'Italian',
-            'days_count' => 2,
-            'price' => null,
-            'status' => 'pending',
-            'public_or_private' => 'private',
-            'delete_able' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            $currentDate->addDay();
+        }
     }
 }

@@ -418,4 +418,105 @@ public function confirmByGuide(Request $request)
         'trip' => $trip
     ]);
 }
+
+
+
+public function showDetail($id)
+{
+    $trip = Trip::with('activities')->find($id);
+
+    if (!$trip) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Trip not found'
+        ], 404);
+    }
+
+    $response = [
+        'id' => $trip->id,
+        'name' => $trip->name,
+        'city' => $trip->city,
+        'overview' => $trip->overview,
+        'short_overview' => $trip->short_overview,
+        'main_image' => [
+            'partial_path' => $trip->main_image,
+            'full_url' => asset('storage/'.$trip->main_image)
+        ],
+        'gallery_images' => $trip->gallery_images ?
+            array_map(function($image) {
+                return [
+                    'partial_path' => $image,
+                    'full_url' => asset('storage/'.$image)
+                ];
+            }, json_decode($trip->gallery_images)) : [],
+        'start_at' => $trip->start_at,
+        'end_at' => $trip->end_at,
+        'language' => $trip->language,
+        'duration_days' => $trip->duration_days,
+        'price_per_night' => $trip->price_per_night,
+        'available_seats' => $trip->available_seats,
+        'status' => $trip->status,
+        'visibility' => $trip->visibility,
+        'is_removable' => $trip->is_removable,
+        'is_guide_confirmed' => $trip->is_guide_confirmed,
+        'activities' => $trip->activities->map(function ($activity) {
+            return [
+                'id' => $activity->id,
+                'title' => $activity->title,
+                'description' => $activity->description,
+                'day_number' => $activity->day_number,
+                'date' => $activity->date
+            ];
+        })
+    ];
+
+    return response()->json([
+        'success' => true,
+        'data' => $response
+    ]);
+}
+
+public function showAllTrips()
+{
+    $trips = Trip::select([
+            'id',
+            'name',
+            'city',
+            'short_overview',
+            'main_image',
+            'gallery_images',
+            'duration_days',
+            'price_per_night',
+            'available_seats'
+        ])
+        ->where('status', 'published')
+        ->get()
+        ->map(function ($trip) {
+            return [
+                'id' => $trip->id,
+                'name' => $trip->name,
+                'city' => $trip->city,
+                'short_overview' => $trip->short_overview,
+                'main_image' => [
+                    'partial_path' => $trip->main_image,
+                    'full_url' => asset('storage/'.$trip->main_image)
+                ],
+                'gallery_images' => $trip->gallery_images ?
+                    array_map(function($image) {
+                        return [
+                            'partial_path' => $image,
+                            'full_url' => asset('storage/'.$image)
+                        ];
+                    }, json_decode($trip->gallery_images)) : [],
+                'duration_days' => $trip->duration_days,
+                'price_per_night' => $trip->price_per_night,
+                'available_seats' => $trip->available_seats
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'data' => $trips
+    ]);
+}
 }
