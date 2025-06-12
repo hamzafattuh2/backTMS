@@ -15,8 +15,13 @@ class DatabaseSeeder extends Seeder
         $this->call(TouristSeeder::class);
         $this->call(TourGuideSeeder::class);
         $this->call(TripSeeder::class);
+
         $this->call(TripPriceSuggestionSeeder::class);
         $this->call(TouristSitesSeeder::class);
+        $this->call(CardWalletSeeder::class);
+        $this->call(PublicTripSeeder::class);
+
+
         // يمكنك إضافة باقي Seeders هنا
 
     }

@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('wallets', function (Blueprint $table) {
-  $table->id();
+    $table->id();
     $table->foreignId('user_id')->constrained()->onDelete('cascade');
     $table->decimal('balance', 10, 2)->default(0);
+    $table->foreignId('card_id')->nullable()->constrained('cards')->onDelete('set null');
     $table->timestamps();
 
-    $table->index('user_id'); // فهرس لتحسين الأداء
-        });
+    $table->index('user_id');
+});
     }
 
     /**

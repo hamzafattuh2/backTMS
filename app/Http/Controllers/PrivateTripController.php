@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 class PrivateTripController extends Controller
 {
 
+
 public function sendPrivateTripReq(Request $request)
 {
     $data = $request->all();
@@ -25,10 +26,10 @@ public function sendPrivateTripReq(Request $request)
     $guides = TourGuide::all();
     $availableGuideIds = [];
     foreach ($guides as $guide) {
-        $hasConflict = $guide->trips()
+        $hasConflict = $guide->guidedTrips()
             ->where(function ($query) use ($startDate, $endDate) {
-                $query->where('start_date', '<=', $endDate)
-                      ->where('end_date', '>=', $startDate);
+                $query->where('start_at', '<=', $endDate)
+                      ->where('end_at', '>=', $startDate);
             })
             ->exists();
         if ($hasConflict) {
@@ -52,10 +53,10 @@ public function sendPrivateTripReq(Request $request)
         ]);
     }
     return response()->json([
-        'message' => 'Private trip requests sent successfully.'
+        'message' => 'Private trip requests sent successfully.',
+        'availableGuideIds' => $availableGuideIds
     ]);
 }
-
 public function getMyTripRequests(Request $request)
 {
     $authUser = auth()->user();
@@ -71,6 +72,7 @@ public function getMyTripRequests(Request $request)
 
     // Join private_trip_requests with users table
     $requests = DB::table('private_trip_requests')
+        ->where('status','pend')
         ->join('users', 'private_trip_requests.user_id', '=', 'users.id')
         ->where('private_trip_requests.tour_id', $guide->id)
         ->where('private_trip_requests.status','pend')
@@ -82,9 +84,8 @@ public function getMyTripRequests(Request $request)
 
     return response()->json([
         'requests' => $requests,
-    ]);
+    ],200);
 }
-
 public function submitOfferForRequest(Request $request)
 {
     $request->validate([
@@ -113,7 +114,8 @@ public function submitOfferForRequest(Request $request)
 
     // Update status of the trip request to 'wait'
     DB::table('private_trip_requests')
-        ->where('id', $request->trip_request_id)
+        ->where('tour_id', $guide->id)
+        ->where('user_id', $tripRequest->user_id)
         ->update(['status' => 'wait', 'updated_at' => now()]);
 
     // Create a private offer for the user
@@ -127,9 +129,8 @@ public function submitOfferForRequest(Request $request)
 
     return response()->json([
         'message' => 'Offer submitted successfully.'
-    ]);
+    ],200);
 }
-
 public function deletePrivateTripRequest(Request $request)
 {
     $authUser = auth()->user();
@@ -137,8 +138,7 @@ public function deletePrivateTripRequest(Request $request)
 
     // Find the trip request by ID
     $tripRequest = DB::table('private_trip_requests')
-        ->where('id', $data['id'])
-        ->where('user_id', $authUser->id)
+        ->where('id', $data['trip_request_id'])
         ->first();
 
     // If not found or not owned by the user
@@ -149,13 +149,12 @@ public function deletePrivateTripRequest(Request $request)
     }
 
     // Delete the request
-    DB::table('private_trip_requests')->where('id', $data['id'])->delete();
+    DB::table('private_trip_requests')->where('id', $data['trip_request_id'])->delete();
 
     return response()->json([
         'message' => 'Private trip request deleted successfully.'
     ]);
 }
-
 public function getMyPrivateOffers()
 {
     $authUser = auth()->user();
@@ -190,6 +189,7 @@ public function getMyPrivateOffers()
         'offers' => $offers,
     ]);
 }
+
 
 public function acceptPrivateOffer(Request $request)
 {

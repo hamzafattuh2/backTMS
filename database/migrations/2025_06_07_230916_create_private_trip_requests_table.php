@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string('lang');
             $table->string('days');
             $table->integer('count_days');
-            $table->enum('status',['pend','wait','accept'])->default('pending');
+            $table->enum('status',['pend','wait','accept'])->default('pend');
             $table->timestamps();
         });
 

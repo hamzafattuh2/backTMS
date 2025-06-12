@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\PrivateTripController;
 use App\Http\Controllers\TouristController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TourGuideController;
@@ -13,7 +14,10 @@ use App\Http\Controllers\TripPriceSuggestionController;
 use App\Http\Controllers\TouristSiteController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\HotelController;
+use App\Http\Controllers\PublicTripController;
 
+
+use App\Http\Controllers\CardController;
 
 
 Route::get('/user', function (Request $request) {
@@ -161,3 +165,20 @@ Route::get('/tourist-sites/top-viewed', [TouristSiteController::class, 'topViewe
 Route::get('/trips', [TripController::class, 'showAllTrips']);
 Route::get('/trip-detail/{id}', [TripController::class, 'showDetail']);
 // });
+
+
+Route::post('/cards', [CardController::class, 'store']);
+Route::post('/cards/verify', [CardController::class, 'verifyCard']);
+
+
+Route::post('/private/trip/request-create',[PrivateTripController::class,'sendPrivateTripReq'])->middleware('auth:sanctum');
+Route::post('/private/trip-guid/create-offer',[PrivateTripController::class,'submitOfferForRequest'])->middleware('auth:sanctum');
+Route::post('/private/trip-guid/delete-request',[PrivateTripController::class,'deletePrivateTripRequest'])->middleware('auth:sanctum');
+Route::get('/private/trip-guid/requests',[PrivateTripController::class,'getMyTripRequests'])->middleware('auth:sanctum');
+Route::get('/private/trip/my-offers',[PrivateTripController::class,'getMyPrivateOffers'])->middleware('auth:sanctum');
+Route::post('/wallets/withdraw', [WalletController::class, 'withdraw']);
+
+Route::get('public-trips/{id}', [PublicTripController::class, 'getTripById']);
+// Route::get('public-trips', PublicTripController::class)->only(['index', 'show']);
+   Route::get('/public-trips', [PublicTripController::class, 'getPublicTrips']);
+    // Route::get('/{id}', [PublicTripController::class, 'getPublicTrip']);
